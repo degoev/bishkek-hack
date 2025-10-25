@@ -55,7 +55,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
     /**
      * @dev Emitted when items are crafted
      */
-    event ItemsCrafted(address indexed crafter, uint256 indexed outputTokenId, uint256 times, uint256 totalOutput);
+    event ItemsCrafted(address indexed crafter, uint256 indexed outputTokenId, uint256 totalOutput);
 
     /**
      * @dev Emitted when items are bridged (burned for in-game use)
@@ -146,7 +146,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * - Burns input items (amounts * times)
      * - Mints output items (amount * times)
      */
-    function craft(uint256 outputTokenId, uint256 times) external nonReentrant {
+    function craft(uint256 outputTokenId, uint256 times) external {
         require(times > 0, "MinecraftItems: times must be > 0");
         require(_recipes[outputTokenId].exists, "MinecraftItems: recipe does not exist");
 
@@ -170,7 +170,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
         uint256 totalOutput = recipe.outputAmount * times;
         _mint(msg.sender, outputTokenId, totalOutput, "");
 
-        emit ItemsCrafted(msg.sender, outputTokenId, times, totalOutput);
+        emit ItemsCrafted(msg.sender, outputTokenId, totalOutput);
     }
 
     // ============ Bridge Functions (Public) ============

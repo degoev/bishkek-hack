@@ -15,7 +15,6 @@ describe("MinecraftItems", function () {
   const STICK = 3n;
   const WOODEN_PICKAXE = 4n;
   const STONE = 5n;
-  const STONE_PICKAXE = 6n;
 
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
@@ -150,7 +149,7 @@ describe("MinecraftItems", function () {
       it("Should allow crafting with sufficient materials", async function () {
         await expect(minecraftItems.connect(player1).craft(WOODEN_PLANK, 1))
           .to.emit(minecraftItems, "ItemsCrafted")
-          .withArgs(player1.address, WOODEN_PLANK, 1, 4n);
+          .withArgs(player1.address, WOODEN_PLANK, 4n);
 
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(99n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(4n);
