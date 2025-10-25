@@ -142,10 +142,10 @@ export default (() => {
   if (!isInitialized) return <div>Loading...</div>;
 
   return (
-    <main className="bg-neutral-900">
-      <div className="mx-auto flex min-h-svh w-full max-w-4xl gap-4 p-4">
-        <div className="flex w-xs shrink-0 flex-col gap-4">
-          <ul className="flex w-fit bg-neutral-800 p-1">
+    <main className="flex min-h-svh flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 p-8">
+      <div className="mx-auto flex w-full max-w-4xl grow gap-4 rounded-sm p-4 ring-4 ring-neutral-800">
+        <div className="flex w-xs shrink-0 flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+          <ul className="flex w-fit gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-900/70 p-1">
             {Object.keys(tabs).map(key => {
               const tab = getTab(key);
               if (!tab) return null;
@@ -156,7 +156,15 @@ export default (() => {
 
               return (
                 <li key={key}>
-                  <button className={cn(isActive && "bg-neutral-700", "p-1 px-3")} onClick={onClick}>
+                  <button
+                    className={cn(
+                      "rounded-sm border-2 px-3 py-1 text-xs tracking-wide uppercase shadow-[2px_2px_0_rgba(0,0,0,0.5)] transition-colors",
+                      isActive
+                        ? "border-emerald-500 bg-emerald-700 text-white"
+                        : "border-neutral-700 bg-neutral-800 text-neutral-200 hover:border-neutral-500 hover:bg-neutral-700",
+                    )}
+                    onClick={onClick}
+                  >
                     {tab.name}
                   </button>
                 </li>
@@ -164,26 +172,35 @@ export default (() => {
             })}
           </ul>
 
-          <button className="bg-neutral-300 p-3 px-4 text-neutral-800" onClick={onClick}>
+          <button
+            className="rounded-sm border-4 border-emerald-800 bg-emerald-600 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-emerald-500 active:translate-y-[1px]"
+            onClick={onClick}
+          >
             {activeTab.button} (space)
           </button>
         </div>
 
-        <div className="flex grow flex-col gap-2 bg-neutral-800 p-4">
-          <h2>Your inventory</h2>
+        <div className="flex grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+          <h2 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
 
-          <div className="grid grid-cols-6 border-[.5px] border-neutral-500">
+          <div className="grid grid-cols-6 gap-0 border-2 border-neutral-700 bg-neutral-900/60">
             {slots.map((slot, index) => (
-              <div key={index} className="relative aspect-square border-[.5px] border-neutral-500 bg-neutral-900">
+              <div
+                key={index}
+                className="group relative aspect-square border-2 border-neutral-700 bg-neutral-900 transition-colors hover:border-emerald-500 hover:bg-neutral-800"
+              >
                 {slot ? (
                   <>
+                    <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
+                      {items[slot.itemKey].name}
+                    </div>
                     <Image
                       src={`/items/${slot.itemKey}.png`}
                       alt={items[slot.itemKey].name}
                       fill
                       className="object-contain p-2"
                     />
-                    <span className="pointer-events-none absolute right-1 bottom-1 rounded bg-neutral-700/80 px-1 text-xs text-white">
+                    <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
                       {slot.count}
                     </span>
                   </>
@@ -192,7 +209,9 @@ export default (() => {
             ))}
           </div>
 
-          <button className="bg-neutral-300 p-3 px-4 text-neutral-800">Move resources onchain</button>
+          <button className="rounded-sm border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800">
+            Move resources onchain
+          </button>
         </div>
       </div>
     </main>
