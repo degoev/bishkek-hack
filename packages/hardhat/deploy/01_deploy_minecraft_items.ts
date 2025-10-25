@@ -17,8 +17,8 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
   const minecraftItems = await deploy("MinecraftItems", {
     from: deployer,
     // Metadata URI - can be updated later with setURI()
-    // Using a placeholder that supports the {id} format for ERC1155
-    args: ["https://game.example/api/item/{id}.json"],
+    // Base URI (contract will append tokenId + ".json" automatically)
+    args: ["https://game.example/api/item/"],
     log: true,
     autoMine: true,
   });

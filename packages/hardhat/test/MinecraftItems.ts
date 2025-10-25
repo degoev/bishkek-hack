@@ -20,7 +20,7 @@ describe("MinecraftItems", function () {
     [owner, player1, player2] = await ethers.getSigners();
 
     const MinecraftItemsFactory = await ethers.getContractFactory("MinecraftItems");
-    minecraftItems = await MinecraftItemsFactory.deploy("https://game.example/api/item/{id}.json");
+    minecraftItems = await MinecraftItemsFactory.deploy("https://game.example/api/item/");
     await minecraftItems.waitForDeployment();
   });
 
@@ -30,9 +30,11 @@ describe("MinecraftItems", function () {
     });
 
     it("Should have correct URI", async function () {
-      // Mint a token to check URI
-      await minecraftItems.mintInitial(owner.address, WOODEN_LOG, 1);
-      expect(await minecraftItems.uri(WOODEN_LOG)).to.equal("https://game.example/api/item/{id}.json");
+      // Check URI for token ID 1 (wooden log)
+      expect(await minecraftItems.uri(WOODEN_LOG)).to.equal("https://game.example/api/item/1.json");
+
+      // Check URI for token ID 5 (stone)
+      expect(await minecraftItems.uri(STONE)).to.equal("https://game.example/api/item/5.json");
     });
   });
 
@@ -409,15 +411,16 @@ describe("MinecraftItems", function () {
 
     describe("setURI", function () {
       it("Should allow owner to update URI", async function () {
-        await minecraftItems.setURI("https://newuri.example/item/{id}.json");
+        await minecraftItems.setURI("https://newuri.example/item/");
 
-        await minecraftItems.mintInitial(owner.address, WOODEN_LOG, 1n);
-        expect(await minecraftItems.uri(WOODEN_LOG)).to.equal("https://newuri.example/item/{id}.json");
+        // Check that URI is updated for different token IDs
+        expect(await minecraftItems.uri(WOODEN_LOG)).to.equal("https://newuri.example/item/1.json");
+        expect(await minecraftItems.uri(STONE)).to.equal("https://newuri.example/item/5.json");
       });
 
       it("Should prevent non-owner from updating URI", async function () {
         await expect(
-          minecraftItems.connect(player1).setURI("https://newuri.example/item/{id}.json"),
+          minecraftItems.connect(player1).setURI("https://newuri.example/item/"),
         ).to.be.revertedWithCustomError(minecraftItems, "OwnableUnauthorizedAccount");
       });
     });

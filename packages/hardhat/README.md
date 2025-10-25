@@ -37,6 +37,16 @@ struct CraftingRecipe {
 
 - `recipes[outputTokenId]` - Output token ID directly to recipe details (no intermediate recipe ID needed!)
 
+### Metadata URI System
+
+The contract implements a **dynamic URI system** that automatically generates metadata URLs for each token:
+
+- **Base URI**: Set during deployment (e.g., `https://game.example/api/item/`)
+- **Token URI**: Automatically concatenates `baseURI + tokenId + ".json"`
+- **Example**: For token ID 1, `uri(1)` returns `https://game.example/api/item/1.json`
+
+This allows for easy integration with metadata servers without needing to use the `{id}` placeholder pattern.
+
 ## Usage Examples
 
 ### Deployment

@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title MinecraftItems
@@ -34,6 +35,8 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
 
     /// @dev Mapping from output token ID to CraftingRecipe
     mapping(uint256 => CraftingRecipe) private _recipes;
+
+    string private _baseURI;
 
     // ============ Events ============
 
@@ -67,9 +70,11 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
 
     /**
      * @dev Constructor sets the metadata URI and initializes ownership
-     * @param uri Base URI for token metadata (supports {id} placeholder)
+     * @param _uri Base URI for token metadata
      */
-    constructor(string memory uri) ERC1155(uri) Ownable(msg.sender) {}
+    constructor(string memory _uri) ERC1155("") Ownable(msg.sender) {
+        _baseURI = _uri;
+    }
 
     // ============ Recipe Management Functions (Owner Only) ============
 
@@ -210,6 +215,15 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
     // ============ View Functions ============
 
     /**
+     * @dev Returns the URI for a specific token ID
+     * @param tokenId The token ID to get the URI for
+     * @return The complete URI string (baseURI + tokenId + ".json")
+     */
+    function uri(uint256 tokenId) public view override returns (string memory) {
+        return string.concat(_baseURI, Strings.toString(tokenId), ".json");
+    }
+
+    /**
      * @dev Returns the complete recipe for a given output token ID
      * @param outputTokenId The output token ID of the recipe to query
      * @return craftingRecipe The crafting recipe details
@@ -294,6 +308,6 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * - Caller must be the owner
      */
     function setURI(string memory newuri) external onlyOwner {
-        _setURI(newuri);
+        _baseURI = newuri;
     }
 }
