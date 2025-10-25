@@ -237,6 +237,133 @@ describe("MinecraftItems", function () {
         );
       });
     });
+
+    describe("Aggregated Crafting", function () {
+      // Recipes and initial logs are already set up in parent beforeEach
+
+      it("Should craft through complete chain: logs → planks → sticks → pickaxe", async function () {
+        // Craft pickaxe from logs in one transaction
+        // Need: 2 sticks + 3 planks = 5 planks total
+        // 1 stick craft needs 2 planks → gives 4 sticks (we use 2)
+        // Total planks needed: 2 (for sticks) + 3 (for pickaxe) = 5 planks
+        // Craft planks 2x: 2 logs → 8 planks
+        await expect(
+          minecraftItems.connect(player1).aggrCraft(
+            [WOODEN_PLANK, STICK, WOODEN_PICKAXE], // All steps including final output
+            [2n, 1n, 1n], // Craft amounts for each step
+          ),
+        )
+          .to.emit(minecraftItems, "ItemsCrafted")
+          .withArgs(player1.address, WOODEN_PICKAXE, 1n);
+
+        // Verify balances
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(98n); // 100 - 2
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(3n); // 8 - 2 - 3
+        expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(2n); // 4 - 2
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PICKAXE)).to.equal(1n);
+      });
+
+      it("Should handle single item array (acts like regular craft)", async function () {
+        // First craft some planks
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 10n); // 10 logs → 40 planks
+
+        // Use aggrCraft with single item (should act like regular craft)
+        await expect(minecraftItems.connect(player1).aggrCraft([STICK], [5n]))
+          .to.emit(minecraftItems, "ItemsCrafted")
+          .withArgs(player1.address, STICK, 20n); // 5 crafts × 4 sticks each
+
+        expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(20n);
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(30n); // 40 - 10
+      });
+
+      it("Should craft multiple final outputs with times parameter", async function () {
+        // Craft 3 pickaxes at once
+        // Per pickaxe: 2 sticks + 3 planks = 5 planks total
+        // For 3 pickaxes: need 15 planks total
+        // Craft planks 4x: 4 logs → 16 planks
+        await minecraftItems.connect(player1).aggrCraft(
+          [WOODEN_PLANK, STICK, WOODEN_PICKAXE],
+          [4n, 3n, 3n], // 4x planks (16 planks), 3x sticks (12 sticks from 6 planks), 3x pickaxes
+        );
+
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PICKAXE)).to.equal(3n);
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(96n); // 100 - 4
+        expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(6n); // 12 - 6
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(1n); // 16 - 6 - 9
+      });
+
+      it("Should revert if insufficient base materials", async function () {
+        // Try to craft but don't have enough logs (player has 100, need 101)
+        await expect(
+          minecraftItems.connect(player1).aggrCraft([WOODEN_PLANK, STICK, WOODEN_PICKAXE], [101n, 1n, 1n]),
+        ).to.be.revertedWith("MinecraftItems: insufficient input balance");
+      });
+
+      it("Should revert if intermediate craft produces insufficient materials", async function () {
+        // Craft only 1 plank (not enough for subsequent crafts)
+        await expect(
+          minecraftItems.connect(player1).aggrCraft(
+            [WOODEN_PLANK, STICK, WOODEN_PICKAXE],
+            [1n, 2n, 1n], // 1x plank gives 4 planks, but 2x stick needs 4 planks (leaves 0 for pickaxe)
+          ),
+        ).to.be.revertedWith("MinecraftItems: insufficient input balance");
+      });
+
+      it("Should revert on array length mismatch", async function () {
+        await expect(minecraftItems.connect(player1).aggrCraft([WOODEN_PLANK], [2n, 1n])).to.be.revertedWith(
+          "MinecraftItems: length mismatch",
+        );
+
+        await expect(minecraftItems.connect(player1).aggrCraft([WOODEN_PLANK, STICK], [2n])).to.be.revertedWith(
+          "MinecraftItems: length mismatch",
+        );
+      });
+
+      it("Should revert on empty arrays", async function () {
+        await expect(minecraftItems.connect(player1).aggrCraft([], [])).to.be.revertedWith(
+          "MinecraftItems: empty arrays",
+        );
+      });
+
+      it("Should revert if any recipe in chain doesn't exist", async function () {
+        const NON_EXISTENT_TOKEN = 999n;
+
+        await expect(
+          minecraftItems.connect(player1).aggrCraft([NON_EXISTENT_TOKEN, WOODEN_PICKAXE], [1n, 1n]),
+        ).to.be.revertedWith("MinecraftItems: recipe does not exist");
+
+        await expect(
+          minecraftItems.connect(player1).aggrCraft([WOODEN_PLANK, STICK, NON_EXISTENT_TOKEN], [2n, 1n, 1n]),
+        ).to.be.revertedWith("MinecraftItems: recipe does not exist");
+      });
+
+      it("Should emit only one ItemsCrafted event for final output", async function () {
+        const tx = await minecraftItems.connect(player1).aggrCraft([WOODEN_PLANK, STICK, WOODEN_PICKAXE], [2n, 1n, 1n]);
+
+        const receipt = await tx.wait();
+        const craftedEvents = receipt?.logs.filter(
+          log => log.topics[0] === minecraftItems.interface.getEvent("ItemsCrafted").topicHash,
+        );
+
+        // Should only have 1 ItemsCrafted event (for final output)
+        expect(craftedEvents?.length).to.equal(1);
+      });
+
+      it("Should handle complex chains with multiple intermediates", async function () {
+        // Setup a longer chain: logs → planks → sticks → pickaxe
+        // This test verifies the iteration works correctly
+        await minecraftItems.connect(player1).aggrCraft(
+          [WOODEN_PLANK, STICK, WOODEN_PICKAXE],
+          [5n, 2n, 2n], // 5x planks (20 planks), 2x sticks (8 sticks), 2x pickaxes
+        );
+
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PICKAXE)).to.equal(2n);
+        // 5 logs used, 20 planks created, 4 used for sticks, 6 used for pickaxes, 10 remaining
+        expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(10n);
+        // 8 sticks created, 4 used for pickaxes, 4 remaining
+        expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(4n);
+      });
+    });
   });
 
   describe("Bridge System", function () {
@@ -246,11 +373,11 @@ describe("MinecraftItems", function () {
     });
 
     it("Should allow bridging single item", async function () {
-      await expect(minecraftItems.connect(player1).bridge([WOODEN_LOG], [50n]))
+      await expect(minecraftItems.connect(player1).bridge([WOODEN_LOG], [75n]))
         .to.emit(minecraftItems, "ItemsBridged")
-        .withArgs(player1.address, [WOODEN_LOG], [50n]);
+        .withArgs(player1.address, [WOODEN_LOG], [75n]);
 
-      expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(50n);
+      expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(25n);
     });
 
     it("Should allow bridging multiple items", async function () {

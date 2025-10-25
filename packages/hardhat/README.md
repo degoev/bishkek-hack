@@ -8,6 +8,7 @@ This Hardhat project implements the **Minecraft Onchain Items** standard – an 
 
 - **Crafting System:** Burn input items to mint output items using the `craft()` method (e.g., burn 2 sticks + 3 planks → mint 1 pickaxe)
 - **Batch Crafting:** Support for crafting multipliers to create multiple items in one transaction
+- **Aggregated Crafting:** Chain multiple crafts in a single transaction using `aggrCraft()` (e.g., logs → planks → sticks → pickaxe in one call)
 - **Bridge System:** Burn items onchain using `bridge()` to sync with in-game inventory via emitted events
 - **Recipe Management:** Flexible recipe system for defining complex crafting chains
 - **Gas Optimized:** Efficient batch operations and storage patterns
@@ -91,6 +92,41 @@ await minecraftItems.craft(2, 10);
 // Craft wooden pickaxe (token ID 4)
 await minecraftItems.craft(4, 1);
 ```
+
+### Aggregated Crafting (Chained Crafting)
+
+Craft items through multiple steps in a single transaction, saving gas and improving UX:
+
+```javascript
+// Craft wooden pickaxe directly from logs in ONE transaction
+// Without aggrCraft: craft(2, 2) → craft(3, 1) → craft(4, 1)  [3 transactions]
+// With aggrCraft: Single transaction for the entire chain!
+
+await minecraftItems.aggrCraft(
+  [2, 3, 4],    // Token IDs: [planks, sticks, pickaxe] - ALL steps including final
+  [2, 1, 1],    // Craft amounts for each step
+);
+
+// Flow executed internally:
+// 1. Craft planks 2x: 2 logs → 8 planks
+// 2. Craft sticks 1x: 2 planks → 4 sticks (6 planks remain)
+// 3. Craft pickaxe 1x: 2 sticks + 3 planks → 1 pickaxe
+
+// Craft multiple pickaxes at once
+await minecraftItems.aggrCraft([2, 3, 4], [5, 2, 2]);
+// Creates 2 pickaxes from base logs in one transaction
+
+// Single item acts like regular craft()
+await minecraftItems.aggrCraft([2], [10]);
+// Equivalent to: craft(2, 10)
+```
+
+**Benefits:**
+- **Single transaction** for complex crafting chains
+- **Gas efficient** compared to multiple separate transactions
+- **Atomic operation**: all-or-nothing (entire chain succeeds or reverts)
+- **Better UX**: Users don't need to calculate intermediate amounts manually
+- **Uniform API**: All crafting steps in arrays (no separate final output parameter)
 
 ### Bridging to Game
 

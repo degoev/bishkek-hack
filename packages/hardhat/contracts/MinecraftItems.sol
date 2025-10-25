@@ -152,6 +152,53 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * - Mints output items (amount * times)
      */
     function craft(uint256 outputTokenId, uint256 times) external {
+        _craftInternal(outputTokenId, times);
+        uint256 totalOutput = _recipes[outputTokenId].outputAmount * times;
+        emit ItemsCrafted(msg.sender, outputTokenId, totalOutput);
+    }
+
+    /**
+     * @dev Crafts items through multiple steps in one transaction
+     * @param proxyIds Array of token IDs to craft (including final output as last element)
+     * @param proxyAmounts Array of craft multipliers for each token ID
+     *
+     * Requirements:
+     * - proxyIds and proxyAmounts arrays must have same length and not be empty
+     * - All recipes in the chain must exist
+     * - Caller must have sufficient materials for the entire chain
+     * - All amounts must be greater than zero
+     *
+     * Example: Craft wooden pickaxe from logs
+     * aggrCraft([2, 3, 4], [2, 1, 1])
+     * - Crafts planks (ID 2) 2 times: 2 logs → 8 planks
+     * - Crafts sticks (ID 3) 1 time: 2 planks → 4 sticks
+     * - Crafts pickaxe (ID 4) 1 time: 2 sticks + 3 planks → 1 pickaxe
+     *
+     * Effects:
+     * - Crafts all items in sequence
+     * - Emits single ItemsCrafted event for the last item only
+     */
+    function aggrCraft(uint256[] calldata proxyIds, uint256[] calldata proxyAmounts) external {
+        require(proxyIds.length > 0, "MinecraftItems: empty arrays");
+        require(proxyIds.length == proxyAmounts.length, "MinecraftItems: length mismatch");
+
+        // Craft all items in the chain
+        for (uint256 i = 0; i < proxyIds.length; i++) {
+            _craftInternal(proxyIds[i], proxyAmounts[i]);
+        }
+
+        // Emit single event for final output (last item in array)
+        uint256 lastIndex = proxyIds.length - 1;
+        uint256 totalOutput = _recipes[proxyIds[lastIndex]].outputAmount * proxyAmounts[lastIndex];
+        emit ItemsCrafted(msg.sender, proxyIds[lastIndex], totalOutput);
+    }
+
+    /**
+     * @dev Internal function to execute crafting logic without emitting events
+     * @param outputTokenId The token ID of the item to craft
+     * @param times Number of times to craft (multiplier for inputs/outputs)
+     */
+    function _craftInternal(uint256 outputTokenId, uint256 times) private {
         require(times > 0, "MinecraftItems: times must be > 0");
         require(_recipes[outputTokenId].exists, "MinecraftItems: recipe does not exist");
 
@@ -161,7 +208,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
         uint256[] memory inputAmounts = recipe.inputAmounts;
         uint256 inputCount = inputTokenIds.length;
 
-        // Check balances and prepare arrays for batch burning
+        // Check balances and burn inputs
         for (uint256 i = 0; i < inputCount; i++) {
             uint256 requiredAmount = inputAmounts[i] * times;
             require(
@@ -174,8 +221,6 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
         // Mint output item
         uint256 totalOutput = recipe.outputAmount * times;
         _mint(msg.sender, outputTokenId, totalOutput, "");
-
-        emit ItemsCrafted(msg.sender, outputTokenId, totalOutput);
     }
 
     // ============ Bridge Functions (Public) ============
