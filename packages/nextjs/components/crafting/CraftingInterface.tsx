@@ -118,7 +118,7 @@ export const CraftingInterface: React.FC = () => {
         <div className="mx-auto flex w-full max-w-7xl grow gap-4 rounded-sm p-4 ring-4 ring-neutral-800">
           {/* Left panel: Crafting table */}
           <div className="flex w-lg shrink-0 flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-            <h2 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
+            <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
 
             <div className="flex items-center gap-6 rounded-sm border-2 border-neutral-700 bg-neutral-900/60 p-3">
               {/* 3x3 Crafting Grid */}
@@ -181,7 +181,7 @@ export const CraftingInterface: React.FC = () => {
 
           {/* Right panel: Inventory */}
           <div className="flex grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-            <h2 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
+            <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
             <InventoryPanel />
           </div>
         </div>

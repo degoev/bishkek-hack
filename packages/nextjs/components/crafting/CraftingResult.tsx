@@ -15,7 +15,7 @@ export const CraftingResult: React.FC = () => {
 
           {/* Quantity Badge */}
           {resultSlot.quantity > 1 && (
-            <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
+            <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 text-xs text-emerald-300">
               {resultSlot.quantity}
             </span>
           )}
@@ -27,7 +27,7 @@ export const CraftingResult: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="font-mono text-xs text-neutral-400">No Recipe</div>
+        <div className="text-xs text-neutral-400">No Recipe</div>
       )}
     </div>
   );

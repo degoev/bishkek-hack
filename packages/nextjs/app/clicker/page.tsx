@@ -208,7 +208,7 @@ export default (() => {
                       fill
                       className="object-contain p-2"
                     />
-                    <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
+                    <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 text-xs text-emerald-300">
                       {slot.count}
                     </span>
                   </>

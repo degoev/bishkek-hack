@@ -60,7 +60,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
 
       {/* Quantity Badge */}
       {quantity > 1 && (
-        <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
+        <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 text-xs text-emerald-300">
           {quantity}
         </span>
       )}

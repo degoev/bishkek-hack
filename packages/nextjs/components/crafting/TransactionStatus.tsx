@@ -25,7 +25,7 @@ export const TransactionStatus: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"></div>
             <div>
-              <h3 className="font-mono text-sm tracking-wide text-neutral-200 uppercase">Crafting...</h3>
+              <h3 className="text-sm tracking-wide text-neutral-200 uppercase">Crafting...</h3>
               <div className="text-xs text-neutral-300">Please wait while your transaction is being processed</div>
             </div>
           </div>
@@ -51,7 +51,7 @@ export const TransactionStatus: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Crafting Successful</h3>
+              <h3 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Successful</h3>
               <div className="text-xs text-neutral-300">
                 Your items have been crafted
                 {txHash && (
@@ -93,7 +93,7 @@ export const TransactionStatus: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="font-mono text-sm tracking-wide text-red-300 uppercase">Transaction Failed</h3>
+              <h3 className="text-sm tracking-wide text-red-300 uppercase">Transaction Failed</h3>
               <div className="text-xs text-neutral-300">{errorMessage || "Please try again"}</div>
             </div>
           </div>
