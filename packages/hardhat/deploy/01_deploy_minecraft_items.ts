@@ -42,53 +42,53 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
    */
 
   try {
-    // Recipe 1: Wooden Log → Wooden Planks
+    // Recipe for Token ID 2: Wooden Log → Wooden Planks
     // 1 wooden log → 4 wooden planks
-    console.log("📜 Adding recipe: Wooden Log → Wooden Planks (1 → 4)");
+    console.log("📜 Adding recipe for Wooden Planks (ID 2): 1 Log → 4 Planks");
     const tx1 = await minecraftItemsContract.addRecipe(
       [1], // input: 1 wooden log
       [1], // amount: 1
-      2, // output: wooden plank
+      2, // output: wooden plank (token ID 2)
       4, // amount: 4
     );
     await tx1.wait();
-    console.log("   ✓ Recipe 0 added");
+    console.log("   ✓ Recipe for token ID 2 added");
 
-    // Recipe 2: Wooden Planks → Sticks
+    // Recipe for Token ID 3: Wooden Planks → Sticks
     // 2 wooden planks → 4 sticks
-    console.log("📜 Adding recipe: Wooden Planks → Sticks (2 → 4)");
+    console.log("📜 Adding recipe for Sticks (ID 3): 2 Planks → 4 Sticks");
     const tx2 = await minecraftItemsContract.addRecipe(
       [2], // input: wooden planks
       [2], // amount: 2
-      3, // output: sticks
+      3, // output: sticks (token ID 3)
       4, // amount: 4
     );
     await tx2.wait();
-    console.log("   ✓ Recipe 1 added");
+    console.log("   ✓ Recipe for token ID 3 added");
 
-    // Recipe 3: Sticks + Wooden Planks → Wooden Pickaxe
+    // Recipe for Token ID 4: Sticks + Wooden Planks → Wooden Pickaxe
     // 2 sticks + 3 wooden planks → 1 wooden pickaxe
-    console.log("📜 Adding recipe: Sticks + Planks → Wooden Pickaxe (2 + 3 → 1)");
+    console.log("📜 Adding recipe for Wooden Pickaxe (ID 4): 2 Sticks + 3 Planks → 1 Pickaxe");
     const tx3 = await minecraftItemsContract.addRecipe(
       [3, 2], // inputs: sticks, planks
       [2, 3], // amounts: 2 sticks, 3 planks
-      4, // output: wooden pickaxe
+      4, // output: wooden pickaxe (token ID 4)
       1, // amount: 1
     );
     await tx3.wait();
-    console.log("   ✓ Recipe 2 added");
+    console.log("   ✓ Recipe for token ID 4 added");
 
-    // Recipe 4: Sticks + Stone → Stone Pickaxe (example with stone)
+    // Recipe for Token ID 6: Sticks + Stone → Stone Pickaxe
     // 2 sticks + 3 stone → 1 stone pickaxe
-    console.log("📜 Adding recipe: Sticks + Stone → Stone Pickaxe (2 + 3 → 1)");
+    console.log("📜 Adding recipe for Stone Pickaxe (ID 6): 2 Sticks + 3 Stone → 1 Pickaxe");
     const tx4 = await minecraftItemsContract.addRecipe(
       [3, 5], // inputs: sticks, stone
       [2, 3], // amounts: 2 sticks, 3 stone
-      6, // output: stone pickaxe
+      6, // output: stone pickaxe (token ID 6)
       1, // amount: 1
     );
     await tx4.wait();
-    console.log("   ✓ Recipe 3 added");
+    console.log("   ✓ Recipe for token ID 6 added");
 
     console.log("\n✅ All recipes added successfully!");
 
@@ -114,15 +114,15 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
     console.log(`   - Stone: ${stoneBalance}`);
 
     console.log("\n🎉 MinecraftItems deployment and setup complete!");
-    console.log("\n📝 Recipe Summary:");
-    console.log("   0: 1 Wooden Log → 4 Wooden Planks");
-    console.log("   1: 2 Wooden Planks → 4 Sticks");
-    console.log("   2: 2 Sticks + 3 Planks → 1 Wooden Pickaxe");
-    console.log("   3: 2 Sticks + 3 Stone → 1 Stone Pickaxe");
+    console.log("\n📝 Recipe Summary (by token ID):");
+    console.log("   Token 2 (Planks):  1 Log → 4 Planks");
+    console.log("   Token 3 (Sticks):  2 Planks → 4 Sticks");
+    console.log("   Token 4 (Wooden Pickaxe): 2 Sticks + 3 Planks → 1 Pickaxe");
+    console.log("   Token 6 (Stone Pickaxe):  2 Sticks + 3 Stone → 1 Pickaxe");
 
     console.log("\n🔍 Try crafting:");
-    console.log("   - await minecraftItems.craft(0, 10) // Craft 10x wooden planks");
-    console.log("   - await minecraftItems.craftByOutput(4, 1) // Craft 1 wooden pickaxe by output ID");
+    console.log("   - await minecraftItems.craft(2, 10) // Craft 10x wooden planks (token ID 2)");
+    console.log("   - await minecraftItems.craft(4, 1)  // Craft 1 wooden pickaxe (token ID 4)");
     console.log("   - await minecraftItems.bridge([1], [50]) // Bridge 50 wooden logs to game");
   } catch (error) {
     console.error("\n❌ Error during setup:", error);

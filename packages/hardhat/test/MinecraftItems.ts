@@ -30,10 +30,6 @@ describe("MinecraftItems", function () {
       expect(await minecraftItems.owner()).to.equal(owner.address);
     });
 
-    it("Should start with zero recipes", async function () {
-      expect(await minecraftItems.recipeCount()).to.equal(0);
-    });
-
     it("Should have correct URI", async function () {
       // Mint a token to check URI
       await minecraftItems.mintInitial(owner.address, WOODEN_LOG, 1);
@@ -49,9 +45,7 @@ describe("MinecraftItems", function () {
           "RecipeAdded",
         );
 
-        expect(await minecraftItems.recipeCount()).to.equal(1);
-
-        const recipe = await minecraftItems.getRecipe(0);
+        const recipe = await minecraftItems.getRecipe(WOODEN_PLANK);
         expect(recipe.exists).to.be.true;
         expect(recipe.outputTokenId).to.equal(WOODEN_PLANK);
         expect(recipe.outputAmount).to.equal(4n);
@@ -60,19 +54,19 @@ describe("MinecraftItems", function () {
       it("Should allow adding recipe with multiple inputs", async function () {
         await minecraftItems.addRecipe([STICK, WOODEN_PLANK], [2n, 3n], WOODEN_PICKAXE, 1n);
 
-        const recipe = await minecraftItems.getRecipe(0);
+        const recipe = await minecraftItems.getRecipe(WOODEN_PICKAXE);
         expect(recipe.inputTokenIds).to.deep.equal([STICK, WOODEN_PLANK]);
         expect(recipe.inputAmounts).to.deep.equal([2n, 3n]);
       });
 
-      it("Should map output token to recipe ID", async function () {
+      it("Should store recipe directly by output token ID", async function () {
         await minecraftItems.addRecipe([WOODEN_LOG], [1n], WOODEN_PLANK, 4n);
 
-        expect(await minecraftItems.outputToRecipeId(WOODEN_PLANK)).to.equal(0);
+        expect(await minecraftItems.recipeExists(WOODEN_PLANK)).to.be.true;
 
-        const recipeByOutput = await minecraftItems.getRecipeByOutput(WOODEN_PLANK);
-        expect(recipeByOutput.exists).to.be.true;
-        expect(recipeByOutput.recipeId).to.equal(0);
+        const recipe = await minecraftItems.getRecipe(WOODEN_PLANK);
+        expect(recipe.exists).to.be.true;
+        expect(recipe.outputTokenId).to.equal(WOODEN_PLANK);
       });
 
       it("Should prevent non-owner from adding recipes", async function () {
@@ -120,14 +114,16 @@ describe("MinecraftItems", function () {
       });
 
       it("Should allow owner to remove a recipe", async function () {
-        await expect(minecraftItems.removeRecipe(0)).to.emit(minecraftItems, "RecipeRemoved").withArgs(0, WOODEN_PLANK);
+        await expect(minecraftItems.removeRecipe(WOODEN_PLANK))
+          .to.emit(minecraftItems, "RecipeRemoved")
+          .withArgs(WOODEN_PLANK);
 
-        const recipe = await minecraftItems.getRecipe(0);
+        const recipe = await minecraftItems.getRecipe(WOODEN_PLANK);
         expect(recipe.exists).to.be.false;
       });
 
       it("Should prevent non-owner from removing recipes", async function () {
-        await expect(minecraftItems.connect(player1).removeRecipe(0)).to.be.revertedWithCustomError(
+        await expect(minecraftItems.connect(player1).removeRecipe(WOODEN_PLANK)).to.be.revertedWithCustomError(
           minecraftItems,
           "OwnableUnauthorizedAccount",
         );
@@ -152,36 +148,36 @@ describe("MinecraftItems", function () {
 
     describe("Basic Crafting", function () {
       it("Should allow crafting with sufficient materials", async function () {
-        await expect(minecraftItems.connect(player1).craft(0, 1))
+        await expect(minecraftItems.connect(player1).craft(WOODEN_PLANK, 1))
           .to.emit(minecraftItems, "ItemsCrafted")
-          .withArgs(player1.address, 0, 1, WOODEN_PLANK, 4n);
+          .withArgs(player1.address, WOODEN_PLANK, 1, 4n);
 
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(99n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(4n);
       });
 
       it("Should support crafting multiple times (multiplier)", async function () {
-        await minecraftItems.connect(player1).craft(0, 10);
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 10);
 
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(90n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(40n);
       });
 
-      it("Should allow crafting by output token ID", async function () {
-        await minecraftItems.connect(player1).craftByOutput(WOODEN_PLANK, 5);
+      it("Should allow direct crafting using token ID", async function () {
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 5);
 
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(95n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(20n);
       });
 
       it("Should reject crafting with insufficient materials", async function () {
-        await expect(minecraftItems.connect(player1).craft(0, 101)).to.be.revertedWith(
+        await expect(minecraftItems.connect(player1).craft(WOODEN_PLANK, 101)).to.be.revertedWith(
           "MinecraftItems: insufficient input balance",
         );
       });
 
       it("Should reject crafting with zero times", async function () {
-        await expect(minecraftItems.connect(player1).craft(0, 0)).to.be.revertedWith(
+        await expect(minecraftItems.connect(player1).craft(WOODEN_PLANK, 0)).to.be.revertedWith(
           "MinecraftItems: times must be > 0",
         );
       });
@@ -191,32 +187,26 @@ describe("MinecraftItems", function () {
           "MinecraftItems: recipe does not exist",
         );
       });
-
-      it("Should reject craftByOutput for non-existent recipe", async function () {
-        await expect(minecraftItems.connect(player1).craftByOutput(999, 1)).to.be.revertedWith(
-          "MinecraftItems: invalid recipe mapping",
-        );
-      });
     });
 
     describe("Complex Crafting Chains", function () {
       it("Should allow full crafting chain: Log → Planks → Sticks → Pickaxe", async function () {
         // Step 1: Log → Planks (1 log → 4 planks)
-        await minecraftItems.connect(player1).craft(0, 1);
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 1);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(4n);
 
         // Step 2: Planks → Sticks (2 planks → 4 sticks)
-        await minecraftItems.connect(player1).craft(1, 1);
+        await minecraftItems.connect(player1).craft(STICK, 1);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(2n);
         expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(4n);
 
         // Step 3: Sticks + Planks → Pickaxe (2 sticks + 3 planks → 1 pickaxe)
         // Need 1 more plank
-        await minecraftItems.connect(player1).craft(0, 1);
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 1);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(6n);
 
         // Now craft pickaxe
-        await minecraftItems.connect(player1).craft(2, 1);
+        await minecraftItems.connect(player1).craft(WOODEN_PICKAXE, 1);
         expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(2n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(3n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PICKAXE)).to.equal(1n);
@@ -224,16 +214,16 @@ describe("MinecraftItems", function () {
 
       it("Should handle crafting multiple pickaxes", async function () {
         // Craft 20 logs into 80 planks
-        await minecraftItems.connect(player1).craft(0, 20);
+        await minecraftItems.connect(player1).craft(WOODEN_PLANK, 20);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(80n);
 
         // Craft 40 planks into 80 sticks
-        await minecraftItems.connect(player1).craft(1, 10);
+        await minecraftItems.connect(player1).craft(STICK, 10);
         expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(40n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(60n);
 
         // Craft 10 pickaxes (need 20 sticks + 30 planks)
-        await minecraftItems.connect(player1).craft(2, 10);
+        await minecraftItems.connect(player1).craft(WOODEN_PICKAXE, 10);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PICKAXE)).to.equal(10n);
         expect(await minecraftItems.balanceOf(player1.address, STICK)).to.equal(20n);
         expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(30n);
@@ -241,7 +231,7 @@ describe("MinecraftItems", function () {
 
       it("Should prevent crafting pickaxe without sufficient materials", async function () {
         // Only have logs, no planks or sticks
-        await expect(minecraftItems.connect(player1).craft(2, 1)).to.be.revertedWith(
+        await expect(minecraftItems.connect(player1).craft(WOODEN_PICKAXE, 1)).to.be.revertedWith(
           "MinecraftItems: insufficient input balance",
         );
       });
@@ -309,13 +299,14 @@ describe("MinecraftItems", function () {
   describe("View Functions", function () {
     beforeEach(async function () {
       await minecraftItems.addRecipe([WOODEN_LOG], [1n], WOODEN_PLANK, 4n);
+      await minecraftItems.addRecipe([WOODEN_PLANK], [2n], STICK, 4n);
       await minecraftItems.addRecipe([STICK, WOODEN_PLANK], [2n, 3n], WOODEN_PICKAXE, 1n);
       await minecraftItems.mintInitialBatch(player1.address, [WOODEN_LOG, STICK, WOODEN_PLANK], [100n, 50n, 60n]);
     });
 
     describe("getRecipe", function () {
       it("Should return complete recipe details", async function () {
-        const recipe = await minecraftItems.getRecipe(1);
+        const recipe = await minecraftItems.getRecipe(WOODEN_PICKAXE);
 
         expect(recipe.inputTokenIds).to.deep.equal([STICK, WOODEN_PLANK]);
         expect(recipe.inputAmounts).to.deep.equal([2n, 3n]);
@@ -330,27 +321,10 @@ describe("MinecraftItems", function () {
       });
     });
 
-    describe("getRecipeByOutput", function () {
-      it("Should return recipe by output token ID", async function () {
-        const recipe = await minecraftItems.getRecipeByOutput(WOODEN_PLANK);
-
-        expect(recipe.recipeId).to.equal(0);
-        expect(recipe.inputTokenIds).to.deep.equal([WOODEN_LOG]);
-        expect(recipe.inputAmounts).to.deep.equal([1n]);
-        expect(recipe.outputAmount).to.equal(4n);
-        expect(recipe.exists).to.be.true;
-      });
-
-      it("Should return false for output without recipe", async function () {
-        const recipe = await minecraftItems.getRecipeByOutput(999);
-        expect(recipe.exists).to.be.false;
-      });
-    });
-
     describe("recipeExists", function () {
       it("Should return true for existing recipe", async function () {
-        expect(await minecraftItems.recipeExists(0)).to.be.true;
-        expect(await minecraftItems.recipeExists(1)).to.be.true;
+        expect(await minecraftItems.recipeExists(WOODEN_PLANK)).to.be.true;
+        expect(await minecraftItems.recipeExists(STICK)).to.be.true;
       });
 
       it("Should return false for non-existent recipe", async function () {
@@ -360,21 +334,21 @@ describe("MinecraftItems", function () {
 
     describe("canCraft", function () {
       it("Should return true when user has sufficient materials", async function () {
-        expect(await minecraftItems.canCraft(player1.address, 0, 1)).to.be.true;
-        expect(await minecraftItems.canCraft(player1.address, 1, 1)).to.be.true;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PLANK, 1)).to.be.true;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PICKAXE, 1)).to.be.true;
       });
 
       it("Should return false when user has insufficient materials", async function () {
-        expect(await minecraftItems.canCraft(player1.address, 0, 101)).to.be.false;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PLANK, 101)).to.be.false;
       });
 
       it("Should calculate correctly for multiple crafts", async function () {
-        // Recipe 1 needs 2 sticks + 3 planks per craft
+        // Recipe for WOODEN_PICKAXE needs 2 sticks + 3 planks per craft
         // Player has 50 sticks, 60 planks
         // Max crafts limited by planks: min(50/2, 60/3) = min(25, 20) = 20
-        expect(await minecraftItems.canCraft(player1.address, 1, 15)).to.be.true;
-        expect(await minecraftItems.canCraft(player1.address, 1, 20)).to.be.true;
-        expect(await minecraftItems.canCraft(player1.address, 1, 21)).to.be.false;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PICKAXE, 15)).to.be.true;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PICKAXE, 20)).to.be.true;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PICKAXE, 21)).to.be.false;
       });
 
       it("Should return false for non-existent recipe", async function () {
@@ -382,7 +356,7 @@ describe("MinecraftItems", function () {
       });
 
       it("Should return false for zero times", async function () {
-        expect(await minecraftItems.canCraft(player1.address, 0, 0)).to.be.false;
+        expect(await minecraftItems.canCraft(player1.address, WOODEN_PLANK, 0)).to.be.false;
       });
     });
   });
@@ -461,9 +435,9 @@ describe("MinecraftItems", function () {
       await minecraftItems.mintInitial(player1.address, WOODEN_LOG, 20n);
 
       // Player crafts materials and tools
-      await minecraftItems.connect(player1).craft(0, 10); // 10 logs → 40 planks
-      await minecraftItems.connect(player1).craft(1, 5); // 10 planks → 20 sticks
-      await minecraftItems.connect(player1).craft(2, 5); // 10 sticks + 15 planks → 5 pickaxes
+      await minecraftItems.connect(player1).craft(WOODEN_PLANK, 10); // 10 logs → 40 planks
+      await minecraftItems.connect(player1).craft(STICK, 5); // 10 planks → 20 sticks
+      await minecraftItems.connect(player1).craft(WOODEN_PICKAXE, 5); // 10 sticks + 15 planks → 5 pickaxes
 
       // Verify final balances
       expect(await minecraftItems.balanceOf(player1.address, WOODEN_LOG)).to.equal(10n);
@@ -482,8 +456,8 @@ describe("MinecraftItems", function () {
       await minecraftItems.mintInitial(player1.address, WOODEN_LOG, 100n);
       await minecraftItems.mintInitial(player2.address, WOODEN_LOG, 50n);
 
-      await minecraftItems.connect(player1).craft(0, 10);
-      await minecraftItems.connect(player2).craft(0, 5);
+      await minecraftItems.connect(player1).craft(WOODEN_PLANK, 10);
+      await minecraftItems.connect(player2).craft(WOODEN_PLANK, 5);
 
       expect(await minecraftItems.balanceOf(player1.address, WOODEN_PLANK)).to.equal(40n);
       expect(await minecraftItems.balanceOf(player2.address, WOODEN_PLANK)).to.equal(20n);

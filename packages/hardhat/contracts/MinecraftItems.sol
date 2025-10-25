@@ -32,14 +32,8 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
 
     // ============ Storage ============
 
-    /// @dev Mapping from recipe ID to CraftingRecipe
-    mapping(uint256 => CraftingRecipe) private recipes;
-
-    /// @dev Mapping from output token ID to recipe ID for quick lookup
-    mapping(uint256 => uint256) public outputToRecipeId;
-
-    /// @dev Counter for total recipes created
-    uint256 public recipeCount;
+    /// @dev Mapping from output token ID to CraftingRecipe
+    mapping(uint256 => CraftingRecipe) private _recipes;
 
     // ============ Events ============
 
@@ -47,7 +41,6 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * @dev Emitted when a new crafting recipe is added
      */
     event RecipeAdded(
-        uint256 indexed recipeId,
         uint256 indexed outputTokenId,
         uint256 outputAmount,
         uint256[] inputTokenIds,
@@ -57,18 +50,12 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
     /**
      * @dev Emitted when a crafting recipe is removed
      */
-    event RecipeRemoved(uint256 indexed recipeId, uint256 indexed outputTokenId);
+    event RecipeRemoved(uint256 indexed outputTokenId);
 
     /**
      * @dev Emitted when items are crafted
      */
-    event ItemsCrafted(
-        address indexed crafter,
-        uint256 indexed recipeId,
-        uint256 times,
-        uint256 outputTokenId,
-        uint256 totalOutput
-    );
+    event ItemsCrafted(address indexed crafter, uint256 indexed outputTokenId, uint256 times, uint256 totalOutput);
 
     /**
      * @dev Emitted when items are bridged (burned for in-game use)
@@ -108,21 +95,15 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
         require(inputTokenIds.length > 0, "MinecraftItems: empty inputs");
         require(inputTokenIds.length == inputAmounts.length, "MinecraftItems: length mismatch");
         require(outputAmount > 0, "MinecraftItems: zero output amount");
-        require(
-            outputToRecipeId[outputTokenId] == 0 &&
-            (recipeCount == 0 || recipes[outputToRecipeId[outputTokenId]].outputTokenId != outputTokenId),
-            "MinecraftItems: recipe for output already exists"
-        );
+        require(!_recipes[outputTokenId].exists, "MinecraftItems: recipe for output already exists");
 
         // Validate all input amounts are greater than zero
         for (uint256 i = 0; i < inputAmounts.length; i++) {
             require(inputAmounts[i] > 0, "MinecraftItems: zero input amount");
         }
 
-        uint256 recipeId = recipeCount++;
-
-        // Store recipe
-        recipes[recipeId] = CraftingRecipe({
+        // Store recipe using output token ID as key
+        _recipes[outputTokenId] = CraftingRecipe({
             inputTokenIds: inputTokenIds,
             inputAmounts: inputAmounts,
             outputTokenId: outputTokenId,
@@ -130,41 +111,34 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
             exists: true
         });
 
-        // Map output token to recipe ID for quick lookup
-        outputToRecipeId[outputTokenId] = recipeId;
-
-        emit RecipeAdded(recipeId, outputTokenId, outputAmount, inputTokenIds, inputAmounts);
+        emit RecipeAdded(outputTokenId, outputAmount, inputTokenIds, inputAmounts);
     }
 
     /**
      * @dev Removes an existing crafting recipe
-     * @param recipeId The ID of the recipe to remove
+     * @param outputTokenId The output token ID of the recipe to remove
      *
      * Requirements:
      * - Caller must be the owner
      * - Recipe must exist
      */
-    function removeRecipe(uint256 recipeId) external onlyOwner {
-        require(recipes[recipeId].exists, "MinecraftItems: recipe does not exist");
+    function removeRecipe(uint256 outputTokenId) external onlyOwner {
+        require(_recipes[outputTokenId].exists, "MinecraftItems: recipe does not exist");
 
-        uint256 outputTokenId = recipes[recipeId].outputTokenId;
+        delete _recipes[outputTokenId];
 
-        // Remove mapping
-        delete outputToRecipeId[outputTokenId];
-        delete recipes[recipeId];
-
-        emit RecipeRemoved(recipeId, outputTokenId);
+        emit RecipeRemoved(outputTokenId);
     }
 
     // ============ Crafting Functions (Public) ============
 
     /**
-     * @dev Crafts items using a specific recipe ID with a multiplier
-     * @param recipeId The ID of the recipe to use
+     * @dev Crafts items using a specific output token ID with a multiplier
+     * @param outputTokenId The token ID of the item to craft
      * @param times Number of times to craft (multiplier for inputs/outputs)
      *
      * Requirements:
-     * - Recipe must exist
+     * - Recipe must exist for the output token ID
      * - Caller must have sufficient balance of all input items
      * - times must be greater than zero
      *
@@ -172,72 +146,31 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * - Burns input items (amounts * times)
      * - Mints output items (amount * times)
      */
-    function craft(uint256 recipeId, uint256 times) external nonReentrant {
+    function craft(uint256 outputTokenId, uint256 times) external nonReentrant {
         require(times > 0, "MinecraftItems: times must be > 0");
-        require(recipes[recipeId].exists, "MinecraftItems: recipe does not exist");
+        require(_recipes[outputTokenId].exists, "MinecraftItems: recipe does not exist");
 
-        CraftingRecipe storage recipe = recipes[recipeId];
+        CraftingRecipe storage recipe = _recipes[outputTokenId];
+
+        uint256[] memory inputTokenIds = recipe.inputTokenIds;
+        uint256[] memory inputAmounts = recipe.inputAmounts;
+        uint256 inputCount = inputTokenIds.length;
 
         // Check balances and prepare arrays for batch burning
-        uint256 inputCount = recipe.inputTokenIds.length;
         for (uint256 i = 0; i < inputCount; i++) {
-            uint256 requiredAmount = recipe.inputAmounts[i] * times;
+            uint256 requiredAmount = inputAmounts[i] * times;
             require(
-                balanceOf(msg.sender, recipe.inputTokenIds[i]) >= requiredAmount,
+                balanceOf(msg.sender, inputTokenIds[i]) >= requiredAmount,
                 "MinecraftItems: insufficient input balance"
             );
-        }
-
-        // Burn input items
-        for (uint256 i = 0; i < inputCount; i++) {
-            _burn(msg.sender, recipe.inputTokenIds[i], recipe.inputAmounts[i] * times);
+            _burn(msg.sender, inputTokenIds[i], requiredAmount);
         }
 
         // Mint output item
         uint256 totalOutput = recipe.outputAmount * times;
-        _mint(msg.sender, recipe.outputTokenId, totalOutput, "");
+        _mint(msg.sender, outputTokenId, totalOutput, "");
 
-        emit ItemsCrafted(msg.sender, recipeId, times, recipe.outputTokenId, totalOutput);
-    }
-
-    /**
-     * @dev Convenience function to craft by specifying the desired output token ID
-     * @param outputTokenId The token ID of the item to craft
-     * @param times Number of times to craft
-     *
-     * Requirements:
-     * - A recipe must exist for the output token ID
-     * - Same requirements as craft()
-     */
-    function craftByOutput(uint256 outputTokenId, uint256 times) external nonReentrant {
-        uint256 recipeId = outputToRecipeId[outputTokenId];
-        require(recipes[recipeId].exists, "MinecraftItems: no recipe for output");
-        require(recipes[recipeId].outputTokenId == outputTokenId, "MinecraftItems: invalid recipe mapping");
-
-        require(times > 0, "MinecraftItems: times must be > 0");
-
-        CraftingRecipe storage recipe = recipes[recipeId];
-
-        // Check balances
-        uint256 inputCount = recipe.inputTokenIds.length;
-        for (uint256 i = 0; i < inputCount; i++) {
-            uint256 requiredAmount = recipe.inputAmounts[i] * times;
-            require(
-                balanceOf(msg.sender, recipe.inputTokenIds[i]) >= requiredAmount,
-                "MinecraftItems: insufficient input balance"
-            );
-        }
-
-        // Burn input items
-        for (uint256 i = 0; i < inputCount; i++) {
-            _burn(msg.sender, recipe.inputTokenIds[i], recipe.inputAmounts[i] * times);
-        }
-
-        // Mint output item
-        uint256 totalOutput = recipe.outputAmount * times;
-        _mint(msg.sender, recipe.outputTokenId, totalOutput, "");
-
-        emit ItemsCrafted(msg.sender, recipeId, times, recipe.outputTokenId, totalOutput);
+        emit ItemsCrafted(msg.sender, outputTokenId, times, totalOutput);
     }
 
     // ============ Bridge Functions (Public) ============
@@ -263,10 +196,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
         // Validate amounts and balances
         for (uint256 i = 0; i < tokenIds.length; i++) {
             require(amounts[i] > 0, "MinecraftItems: zero amount");
-            require(
-                balanceOf(msg.sender, tokenIds[i]) >= amounts[i],
-                "MinecraftItems: insufficient balance"
-            );
+            require(balanceOf(msg.sender, tokenIds[i]) >= amounts[i], "MinecraftItems: insufficient balance");
         }
 
         // Burn tokens
@@ -280,88 +210,37 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
     // ============ View Functions ============
 
     /**
-     * @dev Returns the complete recipe for a given recipe ID
-     * @param recipeId The ID of the recipe to query
-     * @return inputTokenIds Array of input token IDs
-     * @return inputAmounts Array of input amounts
-     * @return outputTokenId The output token ID
-     * @return outputAmount The output amount
-     * @return exists Whether the recipe exists
+     * @dev Returns the complete recipe for a given output token ID
+     * @param outputTokenId The output token ID of the recipe to query
+     * @return craftingRecipe The crafting recipe details
+     *
      */
-    function getRecipe(uint256 recipeId)
-        external
-        view
-        returns (
-            uint256[] memory inputTokenIds,
-            uint256[] memory inputAmounts,
-            uint256 outputTokenId,
-            uint256 outputAmount,
-            bool exists
-        )
-    {
-        CraftingRecipe storage recipe = recipes[recipeId];
-        return (
-            recipe.inputTokenIds,
-            recipe.inputAmounts,
-            recipe.outputTokenId,
-            recipe.outputAmount,
-            recipe.exists
-        );
+    function getRecipe(uint256 outputTokenId) external view returns (CraftingRecipe memory) {
+        return _recipes[outputTokenId];
     }
 
     /**
-     * @dev Returns the recipe ID and details for a given output token ID
-     * @param outputTokenId The token ID to query
-     * @return recipeId The recipe ID for this output
-     * @return inputTokenIds Array of input token IDs
-     * @return inputAmounts Array of input amounts
-     * @return outputAmount The output amount
+     * @dev Checks if a recipe exists for a given output token ID
+     * @param outputTokenId The output token ID to check
      * @return exists Whether the recipe exists
      */
-    function getRecipeByOutput(uint256 outputTokenId)
-        external
-        view
-        returns (
-            uint256 recipeId,
-            uint256[] memory inputTokenIds,
-            uint256[] memory inputAmounts,
-            uint256 outputAmount,
-            bool exists
-        )
-    {
-        recipeId = outputToRecipeId[outputTokenId];
-        CraftingRecipe storage recipe = recipes[recipeId];
-
-        // Verify the mapping is correct
-        if (recipe.exists && recipe.outputTokenId == outputTokenId) {
-            return (recipeId, recipe.inputTokenIds, recipe.inputAmounts, recipe.outputAmount, true);
-        }
-
-        return (0, new uint256[](0), new uint256[](0), 0, false);
-    }
-
-    /**
-     * @dev Checks if a recipe exists
-     * @param recipeId The recipe ID to check
-     * @return exists Whether the recipe exists
-     */
-    function recipeExists(uint256 recipeId) external view returns (bool) {
-        return recipes[recipeId].exists;
+    function recipeExists(uint256 outputTokenId) external view returns (bool) {
+        return _recipes[outputTokenId].exists;
     }
 
     /**
      * @dev Checks if a user can craft a specific recipe a certain number of times
      * @param user The address to check
-     * @param recipeId The recipe ID to check
+     * @param outputTokenId The output token ID to check
      * @param times Number of times to craft
-     * @return canCraft Whether the user has sufficient materials
+     * @return Whether the user has sufficient materials
      */
-    function canCraft(address user, uint256 recipeId, uint256 times) external view returns (bool) {
-        if (!recipes[recipeId].exists || times == 0) {
+    function canCraft(address user, uint256 outputTokenId, uint256 times) external view returns (bool) {
+        if (!_recipes[outputTokenId].exists || times == 0) {
             return false;
         }
 
-        CraftingRecipe storage recipe = recipes[recipeId];
+        CraftingRecipe storage recipe = _recipes[outputTokenId];
         uint256 inputCount = recipe.inputTokenIds.length;
 
         for (uint256 i = 0; i < inputCount; i++) {
@@ -401,11 +280,7 @@ contract MinecraftItems is ERC1155, Ownable, ReentrancyGuard {
      * - Caller must be the owner
      * - Arrays must have the same length
      */
-    function mintInitialBatch(
-        address to,
-        uint256[] calldata tokenIds,
-        uint256[] calldata amounts
-    ) external onlyOwner {
+    function mintInitialBatch(address to, uint256[] calldata tokenIds, uint256[] calldata amounts) external onlyOwner {
         require(to != address(0), "MinecraftItems: mint to zero address");
         require(tokenIds.length == amounts.length, "MinecraftItems: length mismatch");
         _mintBatch(to, tokenIds, amounts, "");
