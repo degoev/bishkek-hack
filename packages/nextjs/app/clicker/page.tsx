@@ -142,9 +142,16 @@ export default (() => {
   if (!isInitialized) return <div>Loading...</div>;
 
   return (
-    <main className="flex min-h-svh flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 p-8">
-      <div className="mx-auto flex w-full max-w-4xl grow gap-4 rounded-sm p-4 ring-4 ring-neutral-800">
-        <div className="flex w-xs shrink-0 flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+    <main
+      style={{
+        background: "url(/textures/stone.png)",
+        backgroundPosition: "center",
+        backgroundSize: 48,
+      }}
+      className="flex min-h-svh flex-col p-8"
+    >
+      <div className="mx-auto flex w-full max-w-4xl grow gap-4 rounded-sm p-4 max-md:flex-col">
+        <div className="flex h-fit flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)] md:grow">
           <ul className="flex w-fit gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-900/70 p-1">
             {Object.keys(tabs).map(key => {
               const tab = getTab(key);
@@ -188,7 +195,7 @@ export default (() => {
           </button>
         </div>
 
-        <div className="flex grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+        <div className="flex h-fit grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
           <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
 
           <div className="grid grid-cols-6 gap-0 border-2 border-neutral-700 bg-neutral-900/60">
