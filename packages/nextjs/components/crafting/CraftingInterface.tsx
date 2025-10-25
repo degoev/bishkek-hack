@@ -100,7 +100,16 @@ export const CraftingInterface: React.FC = () => {
   };
 
   const handleClear = () => {
-    clearCraftingGrid();
+    const { craftingGrid, setCraftingSlot, addToInventory } = useCraftingStore.getState();
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const slot = craftingGrid[i][j];
+        if (slot && slot.item) {
+          addToInventory(slot.item, slot.quantity);
+          setCraftingSlot(i, j, null);
+        }
+      }
+    }
   };
 
   return (
