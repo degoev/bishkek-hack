@@ -1,6 +1,6 @@
 "use client";
 
-import { CraftingInterface } from "../../components/crafting";
+import { CraftingInterface } from "../components/crafting";
 
 const Page: React.FC = () => {
   return (

@@ -1,6 +1,6 @@
 import { TransactionReceipt } from "viem";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import { ObjectFieldDisplay } from "~~/app/scaffold/debug/_components/contract";
+import { ObjectFieldDisplay } from "~~/app/(scaffold)/debug/_components/contract";
 import { useCopyToClipboard } from "~~/hooks/scaffold-eth/useCopyToClipboard";
 import { replacer } from "~~/utils/scaffold-eth/common";
 
