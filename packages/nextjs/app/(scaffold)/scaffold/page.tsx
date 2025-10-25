@@ -5,8 +5,6 @@ import { useAccount } from "wagmi";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
 
-type Props = Record<string, unknown>;
-
 export default (() => {
   const { address: connectedAddress } = useAccount();
 
@@ -66,4 +64,4 @@ export default (() => {
       </div>
     </div>
   );
-}) as React.FC<Props>;
+}) as React.FC;

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useCraftingStore } from "../../services/store/inventoryStore";
 import type { MinecraftItem } from "../../services/store/inventoryStore";
 import { CraftingGrid } from "./CraftingGrid";
@@ -16,7 +16,16 @@ import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 export const CraftingInterface: React.FC = () => {
   const [activeItem, setActiveItem] = React.useState<MinecraftItem | null>(null);
   const { craftingGrid, clearCraftingGrid } = useCraftingStore();
-  const { address } = useAccount();
+  const { address, isConnected, connector } = useAccount();
+
+  useEffect(() => {
+    if (isConnected) {
+      console.log(`Connected to wallet with address: ${address} via ${connector?.name}`, connector);
+    } else {
+      console.log("Wallet not connected");
+    }
+  }, [isConnected, address, connector]);
+
   const { craftOnChain, isCrafting } = useMinecraftCrafting();
 
   const handleDragStart = (event: DragStartEvent) => {

@@ -1,6 +1,6 @@
 import { Footer } from "~~/components/Footer";
 
-type Props = React.PropsWithChildren & Record<string, unknown>;
+type Props = React.PropsWithChildren;
 
 export default (({ children }) => {
   return (
