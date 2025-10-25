@@ -18,15 +18,15 @@ export const TransactionStatus: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-md">
+    <div className="fixed right-4 bottom-4 z-50 max-w-md">
       {/* Pending State */}
       {txStatus === "pending" && (
-        <div className="alert bg-blue-600 text-white shadow-lg">
+        <div className="rounded-sm border-2 border-neutral-700 bg-neutral-800/90 p-3 text-neutral-200 shadow-[4px_4px_0_rgba(0,0,0,0.6)]">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"></div>
             <div>
-              <h3 className="font-bold">Crafting...</h3>
-              <div className="text-sm">Please wait while your transaction is being processed</div>
+              <h3 className="font-mono text-sm tracking-wide text-neutral-200 uppercase">Crafting...</h3>
+              <div className="text-xs text-neutral-300">Please wait while your transaction is being processed</div>
             </div>
           </div>
         </div>
@@ -34,15 +34,16 @@ export const TransactionStatus: React.FC = () => {
 
       {/* Success State */}
       {txStatus === "success" && (
-        <div className="alert bg-green-600 text-white shadow-lg">
-          <div>
+        <div className="rounded-sm border-2 border-neutral-700 bg-neutral-800/90 p-3 text-neutral-200 shadow-[4px_4px_0_rgba(0,0,0,0.6)]">
+          <div className="flex items-center gap-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 flex-shrink-0 stroke-current"
+              className="h-5 w-5 flex-shrink-0 text-emerald-400"
               fill="none"
               viewBox="0 0 24 24"
             >
               <path
+                stroke="currentColor"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
@@ -50,8 +51,8 @@ export const TransactionStatus: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="font-bold">Crafting Successful!</h3>
-              <div className="text-sm">
+              <h3 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Crafting Successful</h3>
+              <div className="text-xs text-neutral-300">
                 Your items have been crafted
                 {txHash && (
                   <>
@@ -61,7 +62,7 @@ export const TransactionStatus: React.FC = () => {
                       href={getBlockExplorerUrl(txHash)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline hover:text-green-200"
+                      className="text-emerald-300 underline hover:text-emerald-200"
                     >
                       View Transaction
                     </a>
@@ -75,15 +76,16 @@ export const TransactionStatus: React.FC = () => {
 
       {/* Error State */}
       {txStatus === "error" && (
-        <div className="alert bg-red-600 text-white shadow-lg">
-          <div>
+        <div className="rounded-sm border-2 border-neutral-700 bg-neutral-800/90 p-3 text-neutral-200 shadow-[4px_4px_0_rgba(0,0,0,0.6)]">
+          <div className="flex items-center gap-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 flex-shrink-0 stroke-current"
+              className="h-5 w-5 flex-shrink-0 text-red-400"
               fill="none"
               viewBox="0 0 24 24"
             >
               <path
+                stroke="currentColor"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
@@ -91,8 +93,8 @@ export const TransactionStatus: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="font-bold">Transaction Failed</h3>
-              <div className="text-sm">{errorMessage || "Please try again"}</div>
+              <h3 className="font-mono text-sm tracking-wide text-red-300 uppercase">Transaction Failed</h3>
+              <div className="text-xs text-neutral-300">{errorMessage || "Please try again"}</div>
             </div>
           </div>
         </div>

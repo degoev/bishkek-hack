@@ -189,7 +189,7 @@ export default (() => {
         </div>
 
         <div className="flex grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-          <h2 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
+          <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
 
           <div className="grid grid-cols-6 gap-0 border-2 border-neutral-700 bg-neutral-900/60">
             {slots.map((slot, index) => (

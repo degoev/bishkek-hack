@@ -49,22 +49,24 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className={`relative flex h-16 w-16 cursor-grab items-center justify-center rounded-lg border-2 border-stone-600 bg-stone-700 transition-all duration-200 hover:border-stone-400 active:cursor-grabbing ${isCurrentlyDragging || isDragging ? "z-50 scale-110 opacity-50" : ""} ${isDragging ? "shadow-2xl" : "shadow-lg"} `}
+      {...(isDragging ? {} : listeners)}
+      {...(isDragging ? {} : attributes)}
+      className={`group relative flex h-16 w-16 items-center justify-center rounded-sm transition-colors hover:border-emerald-500 ${
+        isDragging ? "pointer-events-none z-50 scale-110" : "cursor-grab active:cursor-grabbing"
+      } ${isCurrentlyDragging ? "opacity-0" : ""}`}
     >
       {/* Item Image */}
-      <img src={item.image} alt={item.name} className="pixelated h-12 w-12 object-contain" draggable={false} />
+      <img src={item.image} alt={item.name} className="h-12 w-12 object-contain p-2" draggable={false} />
 
       {/* Quantity Badge */}
       {quantity > 1 && (
-        <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border border-yellow-600 bg-yellow-500 text-xs font-bold text-black">
+        <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
           {quantity}
-        </div>
+        </span>
       )}
 
       {/* Item Name Tooltip */}
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform rounded bg-gray-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity duration-200 hover:opacity-100">
+      <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
         {item.name}
         {quantity > 1 && ` (${quantity})`}
       </div>

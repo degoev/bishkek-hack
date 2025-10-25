@@ -7,31 +7,27 @@ export const CraftingResult: React.FC = () => {
   const { resultSlot } = useCraftingStore();
 
   return (
-    <div className="relative flex h-20 w-20 items-center justify-center rounded-lg border-2 border-stone-500 bg-stone-300">
+    <div className="group relative flex h-20 w-20 items-center justify-center rounded-sm border-2 border-neutral-700 bg-neutral-900">
       {resultSlot ? (
         <div className="relative">
           {/* Item Image */}
-          <img
-            src={resultSlot.item!.image}
-            alt={resultSlot.item!.name}
-            className="pixelated h-16 w-16 object-contain"
-          />
+          <img src={resultSlot.item!.image} alt={resultSlot.item!.name} className="h-16 w-16 object-contain p-2" />
 
           {/* Quantity Badge */}
           {resultSlot.quantity > 1 && (
-            <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border border-yellow-600 bg-yellow-500 text-xs font-bold text-black">
+            <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
               {resultSlot.quantity}
-            </div>
+            </span>
           )}
 
           {/* Item Name Tooltip */}
-          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform rounded bg-gray-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity duration-200 hover:opacity-100">
+          <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
             {resultSlot.item!.name}
             {resultSlot.quantity > 1 && ` (${resultSlot.quantity})`}
           </div>
         </div>
       ) : (
-        <div className="text-center text-xs text-stone-500">No Recipe</div>
+        <div className="font-mono text-xs text-neutral-400">No Recipe</div>
       )}
     </div>
   );
