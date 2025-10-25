@@ -4,10 +4,14 @@ This file provides guidance when working with the Hardhat package of the Minecra
 
 ## Project Overview
 
-This is the smart contract layer of a Scaffold-ETH 2 based project for **Minecraft Onchain Items** - a standard for ERC1155 tokens with special features:
+This is the smart contract layer of a Scaffold-ETH 2 based project implementing **Minecraft Onchain Items** - an ERC1155 token system with blockchain-based crafting and game bridging.
 
-- **Crafting System:** `craft()` method for batch burning & minting (e.g., burn 2 sticks + 3 diamonds → mint diamond pickaxe)
-- **Bridge System:** `bridge()` method for onchain burning that emits events to sync with in-game inventory
+**Key Features:**
+
+- **Crafting System:** `craft()` and `aggrCraft()` methods for recipe-based item creation (burn inputs → mint outputs)
+- **Bridge System:** `bridge()` method for burning onchain items and syncing with in-game inventory via events
+- **Recipe Management:** Owner-controlled crafting recipe registry with validation
+- **Batch Operations:** Support for multi-step crafting chains in a single transaction
 
 **Tech Stack:**
 
@@ -23,9 +27,11 @@ This is the smart contract layer of a Scaffold-ETH 2 based project for **Minecra
 ```
 packages/hardhat/
 ├── contracts/           # Solidity smart contracts
-│   └── YourContract.sol # Main contract (rename for your needs)
+│   ├── MinecraftItems.sol          # Main ERC1155 crafting contract
+│   └── YourContract.sol            # Scaffold-ETH demo contract
 ├── deploy/              # Deployment scripts (hardhat-deploy)
-│   └── 00_deploy_your_contract.ts
+│   ├── 00_deploy_your_contract.ts
+│   └── 01_deploy_minecraft_items.ts  # MinecraftItems deployment with initial recipes
 ├── scripts/             # Helper scripts
 │   ├── generateAccount.ts          # Generate new burner wallet
 │   ├── importAccount.ts            # Import existing private key
@@ -34,6 +40,7 @@ packages/hardhat/
 │   ├── runHardhatDeployWithPK.ts   # Deploy with PK management
 │   └── generateTsAbis.ts           # Auto-generate TypeScript ABIs
 ├── test/                # Contract tests (Mocha + Chai)
+│   ├── MinecraftItems.ts           # Comprehensive MinecraftItems tests
 │   └── YourContract.ts
 ├── hardhat.config.ts    # Hardhat configuration
 ├── package.json         # Package dependencies and scripts
@@ -243,6 +250,20 @@ yarn deploy --network sepolia
 # Verify contracts
 yarn verify --network sepolia
 ```
+
+### What Happens During Deployment
+
+When you run `yarn deploy`, the `01_deploy_minecraft_items.ts` script:
+
+1. Deploys the MinecraftItems contract with base metadata URI
+2. Automatically sets up 4 initial crafting recipes:
+   - Token 2 (Planks): 1 Log → 4 Planks
+   - Token 3 (Sticks): 2 Planks → 4 Sticks
+   - Token 4 (Wooden Pickaxe): 2 Sticks + 3 Planks → 1 Pickaxe
+   - Token 6 (Stone Pickaxe): 2 Sticks + 3 Stone → 1 Pickaxe
+3. Mints 100 wooden logs (ID: 1) and 100 stone (ID: 5) to the deployer
+4. Displays deployment summary with addresses and balances
+5. Triggers TypeScript ABI generation for frontend
 
 ## Contract Hot Reload System
 
@@ -467,24 +488,87 @@ MAINNET_FORKING_ENABLED=false
 - Review gas reports before mainnet deployment
 - Consider optimizer runs (currently 200)
 
-## Minecraft Onchain Items Implementation
+## MinecraftItems Contract Architecture
 
-When implementing the Minecraft items standard:
+The `MinecraftItems.sol` contract implements the complete Minecraft Onchain Items system:
 
-1. **Use ERC1155** from OpenZeppelin contracts
-2. **Implement crafting:**
-   - `craft(uint256[] memory burnTokenIds, uint256[] memory burnAmounts, uint256 mintTokenId, uint256 mintAmount)`
-   - Batch burn inputs, mint output
-   - Validate crafting recipes
-3. **Implement bridging:**
-   - `bridge(uint256[] memory tokenIds, uint256[] memory amounts)`
-   - Burn tokens onchain
-   - Emit `Burn` event for game backend to listen
-4. **Consider adding:**
-   - Crafting recipe registry
-   - Item metadata (IPFS/onchain)
-   - Access control for minting
-   - Pausability for emergencies
+### Core Components
+
+1. **Recipe System** - Recipes are stored by output token ID, enabling efficient lookups
+   - `addRecipe()` - Owner adds crafting recipes with input/output mappings
+   - `removeRecipe()` - Owner removes existing recipes
+   - `getRecipe()` - View complete recipe details
+   - `recipeExists()` - Check if recipe exists for an output token ID
+
+2. **Crafting Functions**
+   - `craft(uint256 outputTokenId, uint256 times)` - Basic crafting with multiplier
+   - `aggrCraft(uint256[] proxyIds, uint256[] proxyAmounts)` - Multi-step crafting chain
+     - Example: craft planks → sticks → pickaxe in one transaction
+     - Only emits event for final output item
+   - `_craftInternal()` - Internal helper used by both public crafting functions
+
+3. **Bridge System**
+   - `bridge(uint256[] tokenIds, uint256[] amounts)` - Burns tokens and emits `ItemsBridged` event
+   - Game backend listens to `ItemsBridged` events to sync in-game inventory
+   - Protected by ReentrancyGuard
+
+4. **Admin Functions**
+   - `mintInitial()` / `mintInitialBatch()` - Owner mints base resources (wood, stone, etc.)
+   - `setURI()` - Update metadata base URI
+   - All admin functions protected by `onlyOwner` modifier
+
+5. **View Functions**
+   - `uri(uint256 tokenId)` - Returns metadata URI (baseURI + tokenId + ".json")
+   - `canCraft(address user, uint256 outputTokenId, uint256 times)` - Check if user has materials
+
+### Token ID Schema (from deployment script)
+
+```
+1 = Wooden Log (base resource)
+2 = Wooden Plank
+3 = Stick
+4 = Wooden Pickaxe
+5 = Stone (base resource)
+6 = Stone Pickaxe
+```
+
+### Example Recipes
+
+```solidity
+// Wooden Planks: 1 Log → 4 Planks
+addRecipe([1], [1], 2, 4)
+
+// Sticks: 2 Planks → 4 Sticks
+addRecipe([2], [2], 3, 4)
+
+// Wooden Pickaxe: 2 Sticks + 3 Planks → 1 Pickaxe
+addRecipe([3, 2], [2, 3], 4, 1)
+
+// Stone Pickaxe: 2 Sticks + 3 Stone → 1 Pickaxe
+addRecipe([3, 5], [2, 3], 6, 1)
+```
+
+### Aggregated Crafting Example
+
+```solidity
+// Craft pickaxe from logs in one transaction:
+// aggrCraft([2, 3, 4], [2, 1, 1])
+//
+// Step 1: Craft planks (ID 2) 2 times: 2 logs → 8 planks
+// Step 2: Craft sticks (ID 3) 1 time: 2 planks → 4 sticks
+// Step 3: Craft pickaxe (ID 4) 1 time: 2 sticks + 3 planks → 1 pickaxe
+// Result: Used 2 logs, got 1 pickaxe + 3 leftover planks
+```
+
+### Testing Strategy
+
+The test suite (`test/MinecraftItems.ts`) covers:
+- Recipe management (add/remove, validation)
+- Basic and aggregated crafting
+- Bridge functionality
+- Admin functions (minting, URI updates)
+- Access control
+- Error cases and edge conditions
 
 ## Troubleshooting
 
@@ -537,19 +621,51 @@ yarn check-types
 
 ### File Locations
 
-- Contracts: `contracts/*.sol`
-- Deployment: `deploy/*.ts`
-- Tests: `test/*.ts`
-- Config: `hardhat.config.ts`
-- Generated types: `typechain-types/`
-- ABIs output: `../nextjs/contracts/deployedContracts.ts`
+- **Main Contract:** `contracts/MinecraftItems.sol`
+- **Demo Contract:** `contracts/YourContract.sol`
+- **Deployments:** `deploy/01_deploy_minecraft_items.ts` (main), `deploy/00_deploy_your_contract.ts` (demo)
+- **Tests:** `test/MinecraftItems.ts` (main), `test/YourContract.ts` (demo)
+- **Config:** `hardhat.config.ts`
+- **Generated Types:** `typechain-types/`
+- **ABIs Output:** `../nextjs/contracts/deployedContracts.ts`
 
 ### Most Used Commands
 
 ```bash
 yarn chain          # Start local node
-yarn deploy         # Deploy contracts
-yarn test           # Run tests
+yarn deploy         # Deploy all contracts
+yarn deploy --tags MinecraftItems  # Deploy only MinecraftItems
+yarn test           # Run all tests with gas reporting
+npx hardhat test test/MinecraftItems.ts  # Run specific test
 yarn generate       # New wallet
 yarn account        # View account
+yarn compile        # Compile contracts
+yarn clean          # Clean artifacts
+```
+
+### Quick Contract Interaction Examples
+
+After deploying (`yarn deploy`), you can interact with MinecraftItems:
+
+```javascript
+// Get contract instance
+const minecraftItems = await ethers.getContractAt("MinecraftItems", "<address>");
+
+// Craft wooden planks from logs
+await minecraftItems.craft(2, 10); // Craft 10x planks (10 logs → 40 planks)
+
+// Craft wooden pickaxe (requires sticks + planks in wallet)
+await minecraftItems.craft(4, 1); // Craft 1 pickaxe
+
+// Multi-step craft: logs → planks → sticks → pickaxe
+await minecraftItems.aggrCraft([2, 3, 4], [2, 1, 1]);
+
+// Bridge items to game
+await minecraftItems.bridge([1], [50]); // Send 50 logs to game
+
+// Check if user can craft
+const canCraft = await minecraftItems.canCraft(userAddress, 4, 1);
+
+// View recipe
+const recipe = await minecraftItems.getRecipe(4); // Get wooden pickaxe recipe
 ```
