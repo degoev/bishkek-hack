@@ -30,100 +30,127 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
 
   console.log("\n⚙️  Setting up initial crafting recipes...");
 
-  /*
-   * Token ID Schema (example):
-   * 1 = Wooden Log (base resource)
-   * 2 = Wooden Plank
-   * 3 = Stick
-   * 4 = Wooden Pickaxe
-   * 5 = Stone
-   * 6 = Stone Pickaxe
-   * ... add more as needed
-   */
+  // Token ID to name mapping
+  const itemNames: Record<number, string> = {
+    1: "Wooden Log",
+    2: "Wooden Plank",
+    3: "Stick",
+    4: "Wooden Pickaxe",
+    5: "Diamond",
+    6: "Diamond Pickaxe",
+    7: "Diamond Sword",
+  };
+
+  // Recipe configurations
+  interface RecipeConfig {
+    outputTokenId: number;
+    outputName: string;
+    outputAmount: number;
+    inputs: Array<{
+      tokenId: number;
+      name: string;
+      amount: number;
+    }>;
+  }
+
+  const recipes: RecipeConfig[] = [
+    {
+      outputTokenId: 2,
+      outputName: itemNames[2],
+      outputAmount: 4,
+      inputs: [{ tokenId: 1, name: itemNames[1], amount: 1 }],
+    },
+    {
+      outputTokenId: 3,
+      outputName: itemNames[3],
+      outputAmount: 4,
+      inputs: [{ tokenId: 2, name: itemNames[2], amount: 2 }],
+    },
+    {
+      outputTokenId: 4,
+      outputName: itemNames[4],
+      outputAmount: 1,
+      inputs: [
+        { tokenId: 3, name: itemNames[3], amount: 2 },
+        { tokenId: 2, name: itemNames[2], amount: 3 },
+      ],
+    },
+    {
+      outputTokenId: 6,
+      outputName: itemNames[6],
+      outputAmount: 1,
+      inputs: [
+        { tokenId: 3, name: itemNames[3], amount: 2 },
+        { tokenId: 5, name: itemNames[5], amount: 3 },
+      ],
+    },
+    {
+      outputTokenId: 7,
+      outputName: itemNames[7],
+      outputAmount: 1,
+      inputs: [
+        { tokenId: 3, name: itemNames[3], amount: 2 },
+        { tokenId: 5, name: itemNames[5], amount: 3 },
+      ],
+    },
+  ];
 
   try {
-    // Recipe for Token ID 2: Wooden Log → Wooden Planks
-    // 1 wooden log → 4 wooden planks
-    console.log("📜 Adding recipe for Wooden Planks (ID 2): 1 Log → 4 Planks");
-    const tx1 = await minecraftItemsContract.addRecipe(
-      [1], // input: 1 wooden log
-      [1], // amount: 1
-      2, // output: wooden plank (token ID 2)
-      4, // amount: 4
-    );
-    await tx1.wait();
-    console.log("   ✓ Recipe for token ID 2 added");
+    // Add all recipes
+    for (const recipe of recipes) {
+      // Build input description for logging
+      const inputDesc = recipe.inputs.map(input => `${input.amount} ${input.name}`).join(" + ");
+      const outputDesc = `${recipe.outputAmount} ${recipe.outputName}`;
 
-    // Recipe for Token ID 3: Wooden Planks → Sticks
-    // 2 wooden planks → 4 sticks
-    console.log("📜 Adding recipe for Sticks (ID 3): 2 Planks → 4 Sticks");
-    const tx2 = await minecraftItemsContract.addRecipe(
-      [2], // input: wooden planks
-      [2], // amount: 2
-      3, // output: sticks (token ID 3)
-      4, // amount: 4
-    );
-    await tx2.wait();
-    console.log("   ✓ Recipe for token ID 3 added");
+      console.log(
+        `📜 Adding recipe for ${recipe.outputName} (ID ${recipe.outputTokenId}): ${inputDesc} → ${outputDesc}`,
+      );
 
-    // Recipe for Token ID 4: Sticks + Wooden Planks → Wooden Pickaxe
-    // 2 sticks + 3 wooden planks → 1 wooden pickaxe
-    console.log("📜 Adding recipe for Wooden Pickaxe (ID 4): 2 Sticks + 3 Planks → 1 Pickaxe");
-    const tx3 = await minecraftItemsContract.addRecipe(
-      [3, 2], // inputs: sticks, planks
-      [2, 3], // amounts: 2 sticks, 3 planks
-      4, // output: wooden pickaxe (token ID 4)
-      1, // amount: 1
-    );
-    await tx3.wait();
-    console.log("   ✓ Recipe for token ID 4 added");
+      const tx = await minecraftItemsContract.addRecipe(
+        recipe.inputs.map(input => input.tokenId),
+        recipe.inputs.map(input => input.amount),
+        recipe.outputTokenId,
+        recipe.outputAmount,
+      );
+      await tx.wait();
 
-    // Recipe for Token ID 6: Sticks + Stone → Stone Pickaxe
-    // 2 sticks + 3 stone → 1 stone pickaxe
-    console.log("📜 Adding recipe for Stone Pickaxe (ID 6): 2 Sticks + 3 Stone → 1 Pickaxe");
-    const tx4 = await minecraftItemsContract.addRecipe(
-      [3, 5], // inputs: sticks, stone
-      [2, 3], // amounts: 2 sticks, 3 stone
-      6, // output: stone pickaxe (token ID 6)
-      1, // amount: 1
-    );
-    await tx4.wait();
-    console.log("   ✓ Recipe for token ID 6 added");
+      console.log(`   ✓ Recipe for token ID ${recipe.outputTokenId} added`);
+    }
 
     console.log("\n✅ All recipes added successfully!");
 
     // Optional: Mint some initial base resources to deployer for testing
     console.log("\n🎁 Minting initial base resources to deployer...");
 
-    const mintTx = await minecraftItemsContract.mintInitialBatch(
-      deployer,
-      [1, 5], // Wooden logs and stone
-      [100, 100], // 100 of each
-    );
+    const baseResourceIds = [1, 5]; // Wooden Log, Diamond
+    const baseResourceAmounts = [100, 100];
+
+    const mintTx = await minecraftItemsContract.mintInitialBatch(deployer, baseResourceIds, baseResourceAmounts);
     await mintTx.wait();
 
-    console.log("   ✓ Minted 100 wooden logs (ID: 1)");
-    console.log("   ✓ Minted 100 stone (ID: 5)");
+    baseResourceIds.forEach((id, index) => {
+      console.log(`   ✓ Minted ${baseResourceAmounts[index]} ${itemNames[id]} (ID: ${id})`);
+    });
 
     // Display balances
-    const logBalance = await minecraftItemsContract.balanceOf(deployer, 1);
-    const stoneBalance = await minecraftItemsContract.balanceOf(deployer, 5);
-
     console.log("\n📊 Deployer balances:");
-    console.log(`   - Wooden Logs: ${logBalance}`);
-    console.log(`   - Stone: ${stoneBalance}`);
+    for (const id of baseResourceIds) {
+      const balance = await minecraftItemsContract.balanceOf(deployer, id);
+      console.log(`   - ${itemNames[id]}: ${balance}`);
+    }
 
     console.log("\n🎉 MinecraftItems deployment and setup complete!");
     console.log("\n📝 Recipe Summary (by token ID):");
-    console.log("   Token 2 (Planks):  1 Log → 4 Planks");
-    console.log("   Token 3 (Sticks):  2 Planks → 4 Sticks");
-    console.log("   Token 4 (Wooden Pickaxe): 2 Sticks + 3 Planks → 1 Pickaxe");
-    console.log("   Token 6 (Stone Pickaxe):  2 Sticks + 3 Stone → 1 Pickaxe");
+    recipes.forEach(recipe => {
+      const inputDesc = recipe.inputs.map(input => `${input.amount} ${input.name}`).join(" + ");
+      const outputDesc = `${recipe.outputAmount} ${recipe.outputName}`;
+      console.log(`   Token ${recipe.outputTokenId} (${recipe.outputName}): ${inputDesc} → ${outputDesc}`);
+    });
 
     console.log("\n🔍 Try crafting:");
-    console.log("   - await minecraftItems.craft(2, 10) // Craft 10x wooden planks (token ID 2)");
-    console.log("   - await minecraftItems.craft(4, 1)  // Craft 1 wooden pickaxe (token ID 4)");
-    console.log("   - await minecraftItems.bridge([1], [50]) // Bridge 50 wooden logs to game");
+    console.log(`   - await minecraftItems.craft(2, 10) // Craft 10x ${itemNames[2]}`);
+    console.log(`   - await minecraftItems.craft(4, 1)  // Craft 1 ${itemNames[4]}`);
+    console.log(`   - await minecraftItems.bridge([1], [50]) // Bridge 50 ${itemNames[1]} to game`);
   } catch (error) {
     console.error("\n❌ Error during setup:", error);
     // Contract is still deployed, recipes can be added manually
