@@ -13,6 +13,8 @@ export const ITEM_TO_TOKEN_ID = {
   diamond_sword: 7n,
 } as const;
 
+export type ItemUid = keyof typeof ITEM_TO_TOKEN_ID;
+
 export const TOKEN_ID_TO_ITEM = {
   1: "oak_log",
   2: "oak_planks",
