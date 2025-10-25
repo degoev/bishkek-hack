@@ -26,7 +26,7 @@ export const useMinecraftCrafting = () => {
     functionName: "balanceOfBatch",
     args: address ? [Array(ALL_TOKEN_IDS.length).fill(address), ALL_TOKEN_IDS] : [[], []],
     watch: true, // Auto-update on new blocks
-    query: { enabled: Boolean(address) },
+    query: { enabled: Boolean(address), refetchInterval: 1_000 },
   });
 
   /**

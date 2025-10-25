@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useAccount } from "wagmi";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getItemBalanceAction, increaseItemBalanceAction } from "~~/services/backend/actions";
+import { bridgeItemsToChainAction, getItemBalanceAction, increaseItemBalanceAction } from "~~/services/backend/actions";
 import { cn } from "~~/utils/cn";
 
 const tabs = {
@@ -158,13 +158,21 @@ export default (() => {
                 <li key={key}>
                   <button
                     className={cn(
-                      "rounded-sm border-2 px-3 py-1 text-xs tracking-wide uppercase shadow-[2px_2px_0_rgba(0,0,0,0.5)] transition-colors",
+                      "flex gap-1 rounded-sm border-2 px-3 py-1 text-xs tracking-wide uppercase shadow-[2px_2px_0_rgba(0,0,0,0.5)] transition-colors",
                       isActive
                         ? "border-emerald-500 bg-emerald-700 text-white"
                         : "border-neutral-700 bg-neutral-800 text-neutral-200 hover:border-neutral-500 hover:bg-neutral-700",
                     )}
                     onClick={onClick}
                   >
+                    <span className="relative size-4">
+                      <Image
+                        src={`/items/${tab.item}.png`}
+                        alt={items[tab.item].name}
+                        fill
+                        className="object-contain"
+                      />
+                    </span>
                     {tab.name}
                   </button>
                 </li>
@@ -209,7 +217,18 @@ export default (() => {
             ))}
           </div>
 
-          <button className="rounded-sm border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800">
+          <button
+            onClick={async () => {
+              if (!address) return;
+
+              await bridgeItemsToChainAction(
+                address,
+                stacks.map(s => s.itemKey),
+              );
+              initialize(address);
+            }}
+            className="rounded-sm border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
+          >
             Move resources onchain
           </button>
         </div>
