@@ -89,8 +89,8 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
       outputName: itemNames[7],
       outputAmount: 1,
       inputs: [
-        { tokenId: 3, name: itemNames[3], amount: 2 },
-        { tokenId: 5, name: itemNames[5], amount: 3 },
+        { tokenId: 3, name: itemNames[3], amount: 1 },
+        { tokenId: 5, name: itemNames[5], amount: 2 },
       ],
     },
   ];

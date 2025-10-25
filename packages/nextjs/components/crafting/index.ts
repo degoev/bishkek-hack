@@ -3,3 +3,4 @@ export { CraftingGrid } from "./CraftingGrid";
 export { CraftingResult } from "./CraftingResult";
 export { DraggableItem } from "./DraggableItem";
 export { InventoryPanel } from "./InventoryPanel";
+export { TransactionStatus } from "./TransactionStatus";

@@ -4,6 +4,7 @@ export const MINECRAFT_ITEMS = [
   { id: "oak_log", name: "Oak Log", image: "/items/oak_log.png" },
   { id: "oak_planks", name: "Oak Planks", image: "/items/oak_planks.png" },
   { id: "stick", name: "Stick", image: "/items/stick.png" },
+  { id: "wooden_pickaxe", name: "Wooden Pickaxe", image: "/items/wooden_pickaxe.png" },
   { id: "diamond", name: "Diamond", image: "/items/diamond.png" },
   { id: "diamond_pickaxe", name: "Diamond Pickaxe", image: "/items/diamond_pickaxe.png" },
   { id: "diamond_sword", name: "Diamond Sword", image: "/items/diamond_sword.png" },
@@ -57,13 +58,20 @@ export interface CraftingSlot {
   quantity: number;
 }
 
+export type TxStatus = "idle" | "pending" | "success" | "error";
+
 export interface CraftingState {
   // 3x3 crafting grid
   craftingGrid: (CraftingSlot | null)[][];
   // Result slot
   resultSlot: CraftingSlot | null;
-  // Player inventory
+  // Player inventory (local UI state)
   inventory: InventoryItem[];
+  // Blockchain state
+  onchainInventory: InventoryItem[];
+  txStatus: TxStatus;
+  txHash: string | null;
+  errorMessage: string | null;
   // Actions
   setCraftingSlot: (row: number, col: number, slot: CraftingSlot | null) => void;
   clearCraftingGrid: () => void;
@@ -71,6 +79,9 @@ export interface CraftingState {
   removeFromInventory: (itemId: ItemId, quantity: number) => boolean;
   craftItem: () => void;
   checkRecipe: () => void;
+  // Blockchain actions
+  syncInventoryFromChain: (balances: readonly bigint[]) => void;
+  setTxStatus: (status: TxStatus, hash: string | null, error: string | null) => void;
 }
 
 // Helper function to match recipes
@@ -140,12 +151,11 @@ export const useCraftingStore = create<CraftingState>((set, get) => ({
     .fill(null)
     .map(() => Array(3).fill(null)),
   resultSlot: null,
-  inventory: [
-    { item: ITEM_LOOKUP.get("oak_log")!, quantity: 10 },
-    { item: ITEM_LOOKUP.get("diamond")!, quantity: 5 },
-    { item: ITEM_LOOKUP.get("oak_planks")!, quantity: 3 },
-    { item: ITEM_LOOKUP.get("stick")!, quantity: 2 },
-  ],
+  inventory: [],
+  onchainInventory: [],
+  txStatus: "idle",
+  txHash: null,
+  errorMessage: null,
 
   setCraftingSlot: (row: number, col: number, slot: CraftingSlot | null) => {
     set(state => {
@@ -235,5 +245,51 @@ export const useCraftingStore = create<CraftingState>((set, get) => ({
     }
 
     set({ resultSlot: null });
+  },
+
+  // Blockchain actions
+  syncInventoryFromChain: (balances: readonly bigint[]) => {
+    console.info(`🚀 ~ balances:`, balances);
+    const TOKEN_ID_TO_ITEM_MAP: Record<number, string> = {
+      1: "oak_log",
+      2: "oak_planks",
+      3: "stick",
+      4: "wooden_pickaxe",
+      5: "diamond",
+      6: "diamond_pickaxe",
+      7: "diamond_sword",
+    };
+
+    const onchainInventory: InventoryItem[] = [];
+
+    balances.forEach((balance, index) => {
+      const tokenId = index + 1;
+      const itemId = TOKEN_ID_TO_ITEM_MAP[tokenId];
+      const item = ITEM_LOOKUP.get(itemId);
+
+      if (item && balance > 0n) {
+        onchainInventory.push({
+          item,
+          quantity: Number(balance),
+        });
+      }
+    });
+
+    // Sync onchain inventory to local inventory for display
+    set({ onchainInventory, inventory: onchainInventory });
+  },
+
+  setTxStatus: (status: TxStatus, hash: string | null, error: string | null) => {
+    set({ txStatus: status, txHash: hash, errorMessage: error });
+
+    // Auto-reset success/error status after 5 seconds
+    if (status === "success" || status === "error") {
+      setTimeout(() => {
+        const currentState = get();
+        if (currentState.txStatus === status) {
+          set({ txStatus: "idle", txHash: null, errorMessage: null });
+        }
+      }, 5000);
+    }
   },
 }));

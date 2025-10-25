@@ -860,7 +860,8 @@ const deployedContracts = {
         balanceOf: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         balanceOfBatch: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         isApprovedForAll: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
-        safeBatchTransferFrom: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
+        safeBatchTransferFrom:
+          "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         safeTransferFrom: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         setApprovalForAll: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         supportsInterface: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",

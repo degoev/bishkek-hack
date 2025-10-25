@@ -7,11 +7,17 @@ import { CraftingGrid } from "./CraftingGrid";
 import { CraftingResult } from "./CraftingResult";
 import { DraggableItem } from "./DraggableItem";
 import { InventoryPanel } from "./InventoryPanel";
+import { TransactionStatus } from "./TransactionStatus";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { useAccount } from "wagmi";
+import { useMinecraftCrafting } from "~~/hooks/useMinecraftCrafting";
+import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 
 export const CraftingInterface: React.FC = () => {
   const [activeItem, setActiveItem] = React.useState<MinecraftItem | null>(null);
-  const { craftItem, clearCraftingGrid } = useCraftingStore();
+  const { craftingGrid, clearCraftingGrid } = useCraftingStore();
+  const { address } = useAccount();
+  const { craftOnChain, isCrafting } = useMinecraftCrafting();
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -59,8 +65,29 @@ export const CraftingInterface: React.FC = () => {
     }
   };
 
-  const handleCraft = () => {
-    craftItem();
+  const handleCraft = async () => {
+    if (!address) {
+      alert("Please connect your wallet to craft items");
+      return;
+    }
+
+    // Get the output token ID from the crafting grid pattern
+    const outputTokenId = getRecipeFromPattern(craftingGrid);
+
+    if (!outputTokenId) {
+      alert("Invalid recipe pattern - try a different arrangement");
+      return;
+    }
+
+    try {
+      // Call the smart contract to craft the item
+      await craftOnChain(outputTokenId, 1n);
+      // Clear the grid on success (handled by event listener)
+      clearCraftingGrid();
+    } catch (error) {
+      console.error("Crafting failed:", error);
+      // Error already handled by useMinecraftCrafting hook
+    }
   };
 
   const handleClear = () => {
@@ -104,13 +131,28 @@ export const CraftingInterface: React.FC = () => {
             <div className="mt-6 flex justify-center gap-4">
               <button
                 onClick={handleCraft}
-                className="rounded-lg bg-green-600 px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-green-700"
+                disabled={isCrafting || !address}
+                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 ${
+                  isCrafting || !address ? "cursor-not-allowed bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                }`}
               >
-                Craft Item
+                {isCrafting ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Crafting...
+                  </span>
+                ) : !address ? (
+                  "Connect Wallet"
+                ) : (
+                  "Craft Item"
+                )}
               </button>
               <button
                 onClick={handleClear}
-                className="rounded-lg bg-red-600 px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-red-700"
+                disabled={isCrafting}
+                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 ${
+                  isCrafting ? "cursor-not-allowed bg-gray-400" : "bg-red-600 hover:bg-red-700"
+                }`}
               >
                 Clear Grid
               </button>
@@ -126,6 +168,9 @@ export const CraftingInterface: React.FC = () => {
 
       {/* Drag Overlay */}
       <DragOverlay>{activeItem ? <DraggableItem item={activeItem} quantity={1} isDragging /> : null}</DragOverlay>
+
+      {/* Transaction Status Toast */}
+      <TransactionStatus />
     </DndContext>
   );
 };
