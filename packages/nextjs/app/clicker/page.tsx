@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect } from "react";
 import Image from "next/image";
+import { useAccount } from "wagmi";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getItemBalanceAction, increaseItemBalanceAction } from "~~/services/backend/actions";
 import { cn } from "~~/utils/cn";
 
 const tabs = {
@@ -12,11 +14,11 @@ const tabs = {
 } as const;
 
 const items = {
-  oak_log: { name: "Oak log", image: "/items/oak_log.png", stackSize: 64, itemsPerClick: 1 },
-  diamond: { name: "Diamond", image: "/items/diamond.png", stackSize: 64, itemsPerClick: 1 },
-  oak_planks: { name: "Oak planks", image: "/items/oak_planks.png", stackSize: 64, itemsPerClick: 1 },
-  diamond_pickaxe: { name: "Diamond pickaxe", image: "/items/diamond_pickaxe.png", stackSize: 1, itemsPerClick: 1 },
-  diamond_sword: { name: "Diamond sword", image: "/items/diamond_sword.png", stackSize: 1, itemsPerClick: 1 },
+  oak_log: { id: 0, name: "Oak log", stackSize: 64, itemsPerClick: 1 },
+  diamond: { id: 0, name: "Diamond", stackSize: 64, itemsPerClick: 1 },
+  oak_planks: { id: 0, name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
+  diamond_pickaxe: { id: 0, name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
+  diamond_sword: { id: 0, name: "Diamond sword", stackSize: 1, itemsPerClick: 1 },
 } as const;
 
 type TItemKey = keyof typeof items;
@@ -25,6 +27,7 @@ type TTabKey = keyof typeof tabs;
 type Store = {
   tab: TTabKey;
   items: Record<TItemKey, number>;
+  isInitialized: boolean;
 };
 
 const useStore = create<Store>()(
@@ -32,6 +35,7 @@ const useStore = create<Store>()(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_set, _get) => ({
       tab: "forest",
+      isInitialized: false,
       items: {
         oak_log: 0,
         diamond: 0,
@@ -50,6 +54,23 @@ const getTab = (key: string) => {
 };
 
 type TStack = { itemKey: TItemKey; count: number };
+
+const initialize = async (address: string) => {
+  const itemKeys = Object.keys(items) as TItemKey[];
+  const balances = await Promise.all(itemKeys.map(itemKey => getItemBalanceAction(address, itemKey)));
+
+  balances.forEach((balance, idx) => {
+    const itemKey = itemKeys[idx];
+    useStore.setState(state => ({
+      items: {
+        ...state.items,
+        [itemKey]: balance,
+      },
+    }));
+  });
+
+  useStore.setState({ isInitialized: true });
+};
 
 const computeStacks = (counts: Record<TItemKey, number>): TStack[] => {
   const result: TStack[] = [];
@@ -71,7 +92,15 @@ const computeStacks = (counts: Record<TItemKey, number>): TStack[] => {
 };
 
 export default (() => {
+  const { address } = useAccount();
+
+  useEffect(() => {
+    if (!address) return;
+    initialize(address);
+  }, [address]);
+
   const activeTabKey = useStore(state => state.tab);
+  const isInitialized = useStore(state => state.isInitialized);
   const activeTab = getTab(activeTabKey);
 
   const itemCounts = useStore(state => state.items);
@@ -79,7 +108,10 @@ export default (() => {
   const slots: (TStack | null)[] = Array.from({ length: Math.max(stacks.length, 36) }, (_, idx) => stacks[idx] ?? null);
 
   const onClick = useCallback(() => {
+    if (!address) return;
     if (!activeTab) return;
+
+    increaseItemBalanceAction(address, activeTab.item, items[activeTab.item].itemsPerClick);
 
     useStore.setState(state => ({
       items: {
@@ -87,7 +119,7 @@ export default (() => {
         [activeTab.item]: state.items[activeTab.item] + items[activeTab.item].itemsPerClick,
       },
     }));
-  }, [activeTab]);
+  }, [activeTab, address]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -107,6 +139,7 @@ export default (() => {
   }, [onClick]);
 
   if (!activeTab) return null;
+  if (!isInitialized) return <div>Loading...</div>;
 
   return (
     <main className="bg-neutral-900">
@@ -145,7 +178,7 @@ export default (() => {
                 {slot ? (
                   <>
                     <Image
-                      src={items[slot.itemKey].image}
+                      src={`/items/${slot.itemKey}.png`}
                       alt={items[slot.itemKey].name}
                       fill
                       className="object-contain p-2"
