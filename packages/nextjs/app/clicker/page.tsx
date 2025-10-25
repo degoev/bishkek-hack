@@ -12,11 +12,11 @@ const tabs = {
 } as const;
 
 const items = {
-  oak_log: { name: "Oak log", image: "/items/oak_log.png", stackSize: 64 },
-  diamond: { name: "Diamond", image: "/items/diamond.png", stackSize: 64 },
-  oak_planks: { name: "Oak planks", image: "/items/oak_planks.png", stackSize: 64 },
-  diamond_pickaxe: { name: "Diamond pickaxe", image: "/items/diamond_pickaxe.png", stackSize: 1 },
-  diamond_sword: { name: "Diamond sword", image: "/items/diamond_sword.png", stackSize: 1 },
+  oak_log: { name: "Oak log", image: "/items/oak_log.png", stackSize: 64, itemsPerClick: 1 },
+  diamond: { name: "Diamond", image: "/items/diamond.png", stackSize: 64, itemsPerClick: 1 },
+  oak_planks: { name: "Oak planks", image: "/items/oak_planks.png", stackSize: 64, itemsPerClick: 1 },
+  diamond_pickaxe: { name: "Diamond pickaxe", image: "/items/diamond_pickaxe.png", stackSize: 1, itemsPerClick: 1 },
+  diamond_sword: { name: "Diamond sword", image: "/items/diamond_sword.png", stackSize: 1, itemsPerClick: 1 },
 } as const;
 
 type TItemKey = keyof typeof items;
@@ -84,7 +84,7 @@ export default (() => {
     useStore.setState(state => ({
       items: {
         ...state.items,
-        [activeTab.item]: state.items[activeTab.item] + 32,
+        [activeTab.item]: state.items[activeTab.item] + items[activeTab.item].itemsPerClick,
       },
     }));
   }, [activeTab]);
