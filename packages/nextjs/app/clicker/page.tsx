@@ -191,7 +191,7 @@ export default (() => {
               >
                 {slot ? (
                   <>
-                    <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
+                    <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
                       {items[slot.itemKey].name}
                     </div>
                     <Image
