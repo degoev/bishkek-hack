@@ -5,5 +5,5 @@ module.exports = {
   trailingComma: "all",
   importOrder: ["^react$", "^next/(.*)$", "<THIRD_PARTY_MODULES>", "^@heroicons/(.*)$", "^~~/(.*)$"],
   importOrderSortSpecifiers: true,
-  plugins: [require.resolve("@trivago/prettier-plugin-sort-imports")],
+  plugins: [require.resolve("@trivago/prettier-plugin-sort-imports"), require.resolve("prettier-plugin-tailwindcss")],
 };
