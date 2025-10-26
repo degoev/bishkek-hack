@@ -35,7 +35,7 @@ export const CraftingInterface: React.FC = () => {
     const swordsCount = inventory.find(({ item }) => item.id === "diamond_sword")?.quantity || 0;
     const pickaxesCount = inventory.find(({ item }) => item.id === "diamond_pickaxe")?.quantity || 0;
 
-    const txHash = await bridge({
+    await bridge({
       functionName: "bridge",
       args: (() => {
         const ids: bigint[] = [];
@@ -160,19 +160,6 @@ export const CraftingInterface: React.FC = () => {
     } catch (error) {
       console.error("Crafting failed:", error);
       // Error already handled by useMinecraftCrafting hook
-    }
-  };
-
-  const handleClear = () => {
-    const { craftingGrid, setCraftingSlot, addToInventory } = useCraftingStore.getState();
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        const slot = craftingGrid[i][j];
-        if (slot && slot.item) {
-          addToInventory(slot.item, slot.quantity);
-          setCraftingSlot(i, j, null);
-        }
-      }
     }
   };
 

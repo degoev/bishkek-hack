@@ -12,13 +12,6 @@ export interface CraftingRoute {
 }
 
 /**
- * Material requirements accumulated during route calculation
- */
-interface MaterialRequirements {
-  [tokenId: string]: number;
-}
-
-/**
  * Crafting step in the execution order
  */
 interface CraftingStep {
@@ -109,9 +102,9 @@ function buildCraftingRoute(
     return true;
   }
 
-  // We need to craft some. Calculate how many times to craft.
-  const deficit = targetAmount - currentlyAvailable;
-  const craftCount = Math.ceil(deficit / recipe.outputAmount);
+  // We don't have enough - ignore partial inventory and craft full amount from scratch
+  // This simplifies logic by avoiding complex partial inventory tracking
+  const craftCount = Math.ceil(targetAmount / recipe.outputAmount);
   const totalProduced = craftCount * recipe.outputAmount;
 
   // First, recursively ensure we have all input materials
@@ -138,12 +131,8 @@ function buildCraftingRoute(
     description: `Craft ${totalProduced} ${getTokenName(targetTokenId)} (${craftCount}x)`,
   });
 
-  // Add the crafted items to available materials
-  const newAvailable = currentlyAvailable + totalProduced;
-  availableMaterials.set(targetTokenId, newAvailable);
-
-  // Deduct what we needed
-  availableMaterials.set(targetTokenId, newAvailable - targetAmount);
+  // Add the crafted items to available materials (ignoring any partial amounts we had)
+  availableMaterials.set(targetTokenId, totalProduced - targetAmount);
 
   return true;
 }
