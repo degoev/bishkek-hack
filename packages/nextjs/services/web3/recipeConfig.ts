@@ -36,8 +36,8 @@ export const RECIPES: Recipe[] = [
     outputTokenId: ITEM_TO_TOKEN_ID.wooden_pickaxe,
     outputAmount: 1,
     inputs: [
-      { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
       { tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 3 },
+      { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
     ],
   },
   // Token 6 (diamond_pickaxe): 2 sticks + 3 diamonds → 1 diamond_pickaxe

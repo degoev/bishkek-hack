@@ -1,22 +1,26 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCraftingStore } from "../../services/store/inventoryStore";
 import type { MinecraftItem } from "../../services/store/inventoryStore";
 import { CraftingGrid } from "./CraftingGrid";
 import { CraftingResult } from "./CraftingResult";
+import { type CraftingTab, CraftingTabs } from "./CraftingTabs";
 import { DraggableItem } from "./DraggableItem";
 import { InventoryPanel } from "./InventoryPanel";
+import { QuickCraftPanel } from "./QuickCraftPanel";
 import { TransactionStatus } from "./TransactionStatus";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useMinecraftCrafting } from "~~/hooks/useMinecraftCrafting";
 import { calculateCraftingRoute } from "~~/services/web3/craftingRoutes";
+import type { CraftableItem } from "~~/services/web3/craftingUtils";
 import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 
 export const CraftingInterface: React.FC = () => {
   const [activeItem, setActiveItem] = React.useState<MinecraftItem | null>(null);
+  const [activeTab, setActiveTab] = useState<CraftingTab>("manual");
   const { craftingGrid, clearCraftingGrid, inventory } = useCraftingStore();
   const { address, isConnected, connector } = useAccount();
 
@@ -172,6 +176,27 @@ export const CraftingInterface: React.FC = () => {
     }
   };
 
+  const handleQuickCraft = async (item: CraftableItem) => {
+    if (!address) {
+      alert("Please connect your wallet to craft items");
+      return;
+    }
+
+    try {
+      if (item.isAggregated) {
+        console.log("🔨 Using aggregated crafting:");
+        item.steps.forEach((step, i) => console.log(`  ${i + 1}. ${step}`));
+        await aggrCraftOnChain(item.route.proxyIds, item.route.proxyAmounts);
+      } else {
+        console.log("🔨 Using direct crafting");
+        await craftOnChain(item.tokenId, 1n);
+      }
+    } catch (error) {
+      console.error("Quick crafting failed:", error);
+      // Error already handled by useMinecraftCrafting hook
+    }
+  };
+
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex min-h-svh flex-col bg-gradient-to-b p-8">
@@ -183,52 +208,69 @@ export const CraftingInterface: React.FC = () => {
           {/* Left panel: Crafting table */}
           <div className="flex h-fit grow flex-col gap-4 border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
             <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
-            <div className="flex items-center gap-6 border-2 border-neutral-700 bg-neutral-900/60 p-3">
-              {/* 3x3 Crafting Grid */}
-              <div className="flex flex-col items-center">
-                <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Crafting Grid</h3>
-                <CraftingGrid />
-              </div>
 
-              {/* Arrow */}
-              <div className="flex items-center">
-                <svg className="h-8 w-8 text-neutral-200" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
+            {/* Tab Switcher */}
+            <CraftingTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Result Slot */}
-              <div className="flex flex-col items-center">
-                <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Result</h3>
-                <CraftingResult />
-              </div>
-            </div>
-            {/* Action Buttons */}
-            <button
-              onClick={handleCraft}
-              disabled={isCrafting || !address}
-              className={`border-4 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
-                isCrafting || !address
-                  ? "cursor-not-allowed border-neutral-700 bg-neutral-600/60 opacity-60"
-                  : "border-emerald-800 bg-emerald-600 hover:bg-emerald-500 active:translate-y-[1px]"
-              }`}
-            >
-              {isCrafting ? (
-                <span className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Crafting...
-                </span>
-              ) : !address ? (
-                "Connect Wallet"
-              ) : (
-                "Craft Item"
-              )}
-            </button>
+            {/* Conditional Content Based on Active Tab */}
+            {activeTab === "manual" ? (
+              <>
+                <div className="flex items-center gap-6 border-2 border-neutral-700 bg-neutral-900/60 p-3">
+                  {/* 3x3 Crafting Grid */}
+                  <div className="flex flex-col items-center">
+                    <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Crafting Grid</h3>
+                    <CraftingGrid />
+                  </div>
 
+                  {/* Arrow */}
+                  <div className="flex items-center">
+                    <svg className="h-8 w-8 text-neutral-200" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Result Slot */}
+                  <div className="flex flex-col items-center">
+                    <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Result</h3>
+                    <CraftingResult />
+                  </div>
+                </div>
+                {/* Action Buttons */}
+                <button
+                  onClick={handleCraft}
+                  disabled={isCrafting || !address}
+                  className={`border-4 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
+                    isCrafting || !address
+                      ? "cursor-not-allowed border-neutral-700 bg-neutral-600/60 opacity-60"
+                      : "border-emerald-800 bg-emerald-600 hover:bg-emerald-500 active:translate-y-[1px]"
+                  }`}
+                >
+                  {isCrafting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      Crafting...
+                    </span>
+                  ) : !address ? (
+                    "Connect Wallet"
+                  ) : (
+                    "Craft Item"
+                  )}
+                </button>
+              </>
+            ) : (
+              <QuickCraftPanel
+                balances={balances}
+                isCrafting={isCrafting}
+                isWalletConnected={Boolean(address)}
+                onCraft={handleQuickCraft}
+              />
+            )}
+
+            {/* Bridge Button (available in both tabs) */}
             <button
               onClick={bridgeItemsToGame}
               className="border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
