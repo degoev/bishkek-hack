@@ -103,13 +103,13 @@ export const EtherInput = ({
       placeholder={placeholder}
       onChange={handleChangeNumber}
       disabled={disabled}
-      prefix={<span className="pl-4 -mr-2 text-accent self-center">{displayUsdMode ? "$" : "Ξ"}</span>}
+      prefix={<span className="text-accent -mr-2 self-center pl-4">{displayUsdMode ? "$" : "Ξ"}</span>}
       suffix={
         <div
           className={`${
             nativeCurrencyPrice > 0
               ? ""
-              : "tooltip tooltip-secondary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
+              : "tooltip tooltip-secondary before:right-[-10px] before:left-auto before:transform-none before:content-[attr(data-tip)]"
           }`}
           data-tip={isNativeCurrencyPriceFetching ? "Fetching price" : "Unable to fetch price"}
         >

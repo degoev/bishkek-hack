@@ -47,10 +47,10 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   }, [reFocus]);
 
   return (
-    <div className={`flex border-2 border-base-300 bg-base-200 rounded-full text-accent ${modifier}`}>
+    <div className={`border-base-300 bg-base-200 text-accent flex rounded-full border-2 ${modifier}`}>
       {prefix}
       <input
-        className="input input-ghost focus-within:border-transparent focus:outline-hidden focus:bg-transparent h-[2.2rem] min-h-[2.2rem] px-4 border w-full font-medium placeholder:text-accent/70 text-base-content/70 focus:text-base-content/70"
+        className="input input-ghost placeholder:text-accent/70 text-base-content/70 focus:text-base-content/70 h-[2.2rem] min-h-[2.2rem] w-full border px-4 font-medium focus-within:border-transparent focus:bg-transparent focus:outline-hidden"
         placeholder={placeholder}
         name={name}
         value={value?.toString()}

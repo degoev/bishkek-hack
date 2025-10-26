@@ -31,12 +31,12 @@ export const RevealBurnerPKModal = () => {
         <label htmlFor="reveal-burner-pk-modal" className="modal cursor-pointer">
           <label className="modal-box relative">
             {/* dummy input to capture event onclick on modal box */}
-            <input className="h-0 w-0 absolute top-0 left-0" />
-            <label htmlFor="reveal-burner-pk-modal" className="btn btn-ghost btn-sm btn-circle absolute right-3 top-3">
+            <input className="absolute top-0 left-0 h-0 w-0" />
+            <label htmlFor="reveal-burner-pk-modal" className="btn btn-ghost btn-sm btn-circle absolute top-3 right-3">
               ✕
             </label>
             <div>
-              <p className="text-lg font-semibold m-0 p-0">Copy Burner Wallet Private Key</p>
+              <p className="m-0 p-0 text-lg font-semibold">Copy Burner Wallet Private Key</p>
               <div role="alert" className="alert alert-warning mt-4">
                 <ShieldExclamationIcon className="h-6 w-6" />
                 <span className="font-semibold">
