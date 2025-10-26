@@ -83,6 +83,14 @@ export const useFetchBlocks = () => {
     fetchBlocks();
   }, [fetchBlocks]);
 
+  // 1s polling to refetch blocks/receipts for the current page
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchBlocks();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [fetchBlocks]);
+
   useEffect(() => {
     const handleNewBlock = async (newBlock: any) => {
       try {

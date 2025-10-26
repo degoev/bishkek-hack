@@ -32,10 +32,21 @@ export const CraftingInterface: React.FC = () => {
 
     const txHash = await bridge({
       functionName: "bridge",
-      args: [
-        [6n, 7n],
-        [BigInt(swordsCount), BigInt(pickaxesCount)],
-      ],
+      args: (() => {
+        const ids: bigint[] = [];
+        const amounts: bigint[] = [];
+
+        if (pickaxesCount > 0) {
+          ids.push(6n);
+          amounts.push(BigInt(pickaxesCount));
+        }
+        if (swordsCount > 0) {
+          ids.push(7n);
+          amounts.push(BigInt(swordsCount));
+        }
+
+        return [ids, amounts];
+      })(),
     });
   };
 
@@ -136,7 +147,7 @@ export const CraftingInterface: React.FC = () => {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex min-h-svh flex-col bg-gradient-to-b p-8">
-        <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+        <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl text-neutral-100 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
           Onchain craft
         </h1>
 
@@ -190,9 +201,14 @@ export const CraftingInterface: React.FC = () => {
               )}
             </button>
 
-            <button onClick={bridgeItemsToGame}>BRIDGE</button>
-
             <button
+              onClick={bridgeItemsToGame}
+              className="border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
+            >
+              Bridge items to game
+            </button>
+
+            {/* <button
               onClick={handleClear}
               disabled={isCrafting}
               className={`border-4 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
@@ -202,7 +218,7 @@ export const CraftingInterface: React.FC = () => {
               }`}
             >
               Clear Grid
-            </button>
+            </button> */}
           </div>
 
           {/* Right panel: Inventory */}

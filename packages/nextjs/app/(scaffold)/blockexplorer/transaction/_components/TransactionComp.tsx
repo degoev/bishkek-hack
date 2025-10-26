@@ -37,6 +37,24 @@ const TransactionComp = ({ txHash }: { txHash: Hash }) => {
     }
   }, [client, txHash]);
 
+  // 1s polling to keep transaction and receipt fresh
+  useEffect(() => {
+    if (!client || !txHash) return;
+    const id = setInterval(async () => {
+      try {
+        const tx = await client.getTransaction({ hash: txHash });
+        const newReceipt = await client.getTransactionReceipt({ hash: txHash });
+        const txDecoded = decodeTransactionData(tx);
+        setTransaction(txDecoded);
+        setReceipt(newReceipt);
+        setFunctionCalled(txDecoded.input.substring(0, 10));
+      } catch (error) {
+        console.error("Failed to refetch transaction:", error);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [client, txHash]);
+
   return (
     <div className="container mx-auto mt-10 mb-20 px-10 md:px-0">
       <button className="btn btn-sm btn-primary" onClick={() => router.back()}>

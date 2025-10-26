@@ -36,18 +36,18 @@ export const Faucet = () => {
         const accounts = await localWalletClient.getAddresses();
         setFaucetAddress(accounts[FAUCET_ACCOUNT_INDEX]);
       } catch (error) {
-        notification.error(
-          <>
-            <p className="font-bold mt-0 mb-1">Cannot connect to local provider</p>
-            <p className="m-0">
-              - Did you forget to run <code className="italic bg-base-300 text-base font-bold">yarn chain</code> ?
-            </p>
-            <p className="mt-1 break-normal">
-              - Or you can change <code className="italic bg-base-300 text-base font-bold">targetNetwork</code> in{" "}
-              <code className="italic bg-base-300 text-base font-bold">scaffold.config.ts</code>
-            </p>
-          </>,
-        );
+        // notification.error(
+        //   <>
+        //     <p className="mt-0 mb-1 font-bold">Cannot connect to local provider</p>
+        //     <p className="m-0">
+        //       - Did you forget to run <code className="bg-base-300 text-base font-bold italic">yarn chain</code> ?
+        //     </p>
+        //     <p className="mt-1 break-normal">
+        //       - Or you can change <code className="bg-base-300 text-base font-bold italic">targetNetwork</code> in{" "}
+        //       <code className="bg-base-300 text-base font-bold italic">scaffold.config.ts</code>
+        //     </p>
+        //   </>,
+        // );
         console.error("⚡️ ~ file: Faucet.tsx:getFaucetAddress ~ error", error);
       }
     };
@@ -81,7 +81,7 @@ export const Faucet = () => {
 
   return (
     <div>
-      <label htmlFor="faucet-modal" className="btn btn-primary btn-sm font-normal gap-1">
+      <label htmlFor="faucet-modal" className="btn btn-primary btn-sm gap-1 font-normal">
         <BanknotesIcon className="h-4 w-4" />
         <span>Faucet</span>
       </label>
@@ -89,9 +89,9 @@ export const Faucet = () => {
       <label htmlFor="faucet-modal" className="modal cursor-pointer">
         <label className="modal-box relative">
           {/* dummy input to capture event onclick on modal box */}
-          <input className="h-0 w-0 absolute top-0 left-0" />
-          <h3 className="text-xl font-bold mb-3">Local Faucet</h3>
-          <label htmlFor="faucet-modal" className="btn btn-ghost btn-sm btn-circle absolute right-3 top-3">
+          <input className="absolute top-0 left-0 h-0 w-0" />
+          <h3 className="mb-3 text-xl font-bold">Local Faucet</h3>
+          <label htmlFor="faucet-modal" className="btn btn-ghost btn-sm btn-circle absolute top-3 right-3">
             ✕
           </label>
           <div className="space-y-3">
@@ -101,7 +101,7 @@ export const Faucet = () => {
                 <Address address={faucetAddress} onlyEnsOrAddress />
               </div>
               <div>
-                <span className="text-sm font-bold pl-3">Available:</span>
+                <span className="pl-3 text-sm font-bold">Available:</span>
                 <Balance address={faucetAddress} />
               </div>
             </div>
@@ -112,7 +112,7 @@ export const Faucet = () => {
                 onChange={value => setInputAddress(value as AddressType)}
               />
               <EtherInput placeholder="Amount to send" value={sendValue} onChange={value => setSendValue(value)} />
-              <button className="h-10 btn btn-primary btn-sm px-2 rounded-full" onClick={sendETH} disabled={loading}>
+              <button className="btn btn-primary btn-sm h-10 rounded-full px-2" onClick={sendETH} disabled={loading}>
                 {!loading ? (
                   <BanknotesIcon className="h-6 w-6" />
                 ) : (

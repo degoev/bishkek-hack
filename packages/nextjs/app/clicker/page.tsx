@@ -170,7 +170,7 @@ export default (() => {
       }}
       className="flex min-h-svh flex-col p-8"
     >
-      <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+      <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl text-neutral-100 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
         Offchain game
       </h1>
 

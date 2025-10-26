@@ -56,18 +56,18 @@ const BlockExplorer: NextPage = () => {
 
   useEffect(() => {
     if (hasError) {
-      notification.error(
-        <>
-          <p className="mt-0 mb-1 font-bold">Cannot connect to local provider</p>
-          <p className="m-0">
-            - Did you forget to run <code className="bg-base-300 text-base font-bold italic">yarn chain</code> ?
-          </p>
-          <p className="mt-1 break-normal">
-            - Or you can change <code className="bg-base-300 text-base font-bold italic">targetNetwork</code> in{" "}
-            <code className="bg-base-300 text-base font-bold italic">scaffold.config.ts</code>
-          </p>
-        </>,
-      );
+      // notification.error(
+      //   <>
+      //     <p className="mt-0 mb-1 font-bold">Cannot connect to local provider</p>
+      //     <p className="m-0">
+      //       - Did you forget to run <code className="bg-base-300 text-base font-bold italic">yarn chain</code> ?
+      //     </p>
+      //     <p className="mt-1 break-normal">
+      //       - Or you can change <code className="bg-base-300 text-base font-bold italic">targetNetwork</code> in{" "}
+      //       <code className="bg-base-300 text-base font-bold italic">scaffold.config.ts</code>
+      //     </p>
+      //   </>,
+      // );
     }
   }, [hasError]);
 
