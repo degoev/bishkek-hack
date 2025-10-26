@@ -7,7 +7,7 @@ export const CraftingResult: React.FC = () => {
   const { resultSlot } = useCraftingStore();
 
   return (
-    <div className="group relative flex h-20 w-20 items-center justify-center rounded-sm border-2 border-neutral-700 bg-neutral-900">
+    <div className="group relative flex h-20 w-20 items-center justify-center border-2 border-neutral-700 bg-neutral-900">
       {resultSlot ? (
         <div className="relative">
           {/* Item Image */}
@@ -15,13 +15,13 @@ export const CraftingResult: React.FC = () => {
 
           {/* Quantity Badge */}
           {resultSlot.quantity > 1 && (
-            <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 text-xs text-emerald-300">
+            <span className="pointer-events-none absolute right-1 bottom-1 bg-neutral-800/90 px-1 text-xs text-emerald-300">
               {resultSlot.quantity}
             </span>
           )}
 
           {/* Item Name Tooltip */}
-          <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
+          <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.25)] group-hover:block">
             {resultSlot.item!.name}
             {resultSlot.quantity > 1 && ` (${resultSlot.quantity})`}
           </div>

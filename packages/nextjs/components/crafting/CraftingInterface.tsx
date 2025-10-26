@@ -115,12 +115,16 @@ export const CraftingInterface: React.FC = () => {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex min-h-svh flex-col bg-gradient-to-b p-8">
-        <div className="mx-auto flex w-full max-w-7xl grow gap-4 rounded-sm p-4 max-md:flex-col">
+        <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+          Onchain craft
+        </h1>
+
+        <div className="mx-auto flex w-full max-w-7xl grow gap-4 p-4 max-md:flex-col">
           {/* Left panel: Crafting table */}
-          <div className="flex h-fit grow flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+          <div className="flex h-fit grow flex-col gap-4 border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
             <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
 
-            <div className="flex items-center gap-6 rounded-sm border-2 border-neutral-700 bg-neutral-900/60 p-3">
+            <div className="flex items-center gap-6 border-2 border-neutral-700 bg-neutral-900/60 p-3">
               {/* 3x3 Crafting Grid */}
               <div className="flex flex-col items-center">
                 <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Crafting Grid</h3>
@@ -149,7 +153,7 @@ export const CraftingInterface: React.FC = () => {
             <button
               onClick={handleCraft}
               disabled={isCrafting || !address}
-              className={`rounded-sm border-4 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
+              className={`border-4 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
                 isCrafting || !address
                   ? "cursor-not-allowed border-neutral-700 bg-neutral-600/60 opacity-60"
                   : "border-emerald-800 bg-emerald-600 hover:bg-emerald-500 active:translate-y-[1px]"
@@ -169,7 +173,7 @@ export const CraftingInterface: React.FC = () => {
             <button
               onClick={handleClear}
               disabled={isCrafting}
-              className={`rounded-sm border-4 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
+              className={`border-4 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
                 isCrafting
                   ? "cursor-not-allowed border-neutral-700 bg-neutral-800 opacity-60"
                   : "border-neutral-700 bg-neutral-900 hover:bg-neutral-800"
@@ -180,7 +184,7 @@ export const CraftingInterface: React.FC = () => {
           </div>
 
           {/* Right panel: Inventory */}
-          <div className="flex h-fit grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
+          <div className="flex h-fit grow flex-col gap-2 border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
             <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
             <InventoryPanel />
           </div>

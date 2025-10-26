@@ -51,7 +51,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       style={style}
       {...(isDragging ? {} : listeners)}
       {...(isDragging ? {} : attributes)}
-      className={`group relative flex h-16 w-16 items-center justify-center rounded-sm transition-colors hover:border-emerald-500 ${
+      className={`group relative flex size-full items-center justify-center transition-colors hover:border-emerald-500 ${
         isDragging ? "pointer-events-none z-50 scale-110" : "cursor-grab active:cursor-grabbing"
       } ${isCurrentlyDragging ? "opacity-0" : ""}`}
     >
@@ -60,13 +60,13 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
 
       {/* Quantity Badge */}
       {quantity > 1 && (
-        <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 text-xs text-emerald-300">
+        <span className="pointer-events-none absolute right-1 bottom-1 bg-neutral-800/90 px-1 text-xs text-emerald-300">
           {quantity}
         </span>
       )}
 
       {/* Item Name Tooltip */}
-      <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
+      <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.25)] group-hover:block">
         {item.name}
         {quantity > 1 && ` (${quantity})`}
       </div>
