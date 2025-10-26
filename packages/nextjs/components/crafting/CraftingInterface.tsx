@@ -10,7 +10,7 @@ import { InventoryPanel } from "./InventoryPanel";
 import { TransactionStatus } from "./TransactionStatus";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useMinecraftCrafting } from "~~/hooks/useMinecraftCrafting";
 import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 
@@ -49,6 +49,10 @@ export const CraftingInterface: React.FC = () => {
       })(),
     });
   };
+
+  useEffect(() => {
+    fetch("/api/sse").catch(err => console.error("Failed to connect to SSE endpoint", err));
+  }, []);
 
   useEffect(() => {
     if (isConnected) {
