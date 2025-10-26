@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 /**
  * Deploys the MinecraftItems ERC1155 contract with initial crafting recipes
  *
@@ -18,7 +19,7 @@ const deployMinecraftItems: DeployFunction = async function (hre: HardhatRuntime
     from: deployer,
     // Metadata URI - can be updated later with setURI()
     // Base URI (contract will append tokenId + ".json" automatically)
-    args: ["https://game.example/api/item/"],
+    args: [`${BASE_URL}/api/item/`],
     log: true,
     autoMine: true,
   });
