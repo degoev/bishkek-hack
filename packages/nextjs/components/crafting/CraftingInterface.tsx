@@ -12,6 +12,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useMinecraftCrafting } from "~~/hooks/useMinecraftCrafting";
+import { calculateCraftingRoute } from "~~/services/web3/craftingRoutes";
 import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 
 export const CraftingInterface: React.FC = () => {
@@ -62,7 +63,7 @@ export const CraftingInterface: React.FC = () => {
     }
   }, [isConnected, address, connector]);
 
-  const { craftOnChain, isCrafting } = useMinecraftCrafting();
+  const { craftOnChain, aggrCraftOnChain, isCrafting, balances } = useMinecraftCrafting();
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -125,8 +126,31 @@ export const CraftingInterface: React.FC = () => {
     }
 
     try {
-      // Call the smart contract to craft the item
-      await craftOnChain(outputTokenId, 1n);
+      // Calculate the optimal crafting route based on user's available materials
+      if (!balances || balances.length === 0) {
+        alert("Loading inventory... Please try again");
+        return;
+      }
+
+      const craftingRoute = calculateCraftingRoute(outputTokenId, balances);
+
+      if (!craftingRoute) {
+        // No route found - insufficient materials even with aggregated crafting
+        alert("Not enough materials to craft this item!");
+        return;
+      }
+
+      // Use aggregated crafting if it's a multi-step route
+      if (craftingRoute.isAggregated) {
+        console.log("🔨 Using aggregated crafting:");
+        craftingRoute.steps.forEach((step, i) => console.log(`  ${i + 1}. ${step}`));
+        await aggrCraftOnChain(craftingRoute.proxyIds, craftingRoute.proxyAmounts);
+      } else {
+        // Single-step crafting
+        console.log("🔨 Using direct crafting");
+        await craftOnChain(outputTokenId, 1n);
+      }
+
       // Clear the grid on success (handled by event listener)
       clearCraftingGrid();
     } catch (error) {

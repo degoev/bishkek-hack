@@ -122,3 +122,41 @@ export function getRecipeOutputAmount(outputTokenId: bigint): number {
       return 1;
   }
 }
+
+/**
+ * Recipe input information
+ */
+export interface RecipeInput {
+  tokenId: bigint;
+  amount: number;
+}
+
+/**
+ * Gets the input requirements for a given recipe
+ * Returns null if no recipe exists for this output
+ */
+export function getRecipeInputs(outputTokenId: bigint): RecipeInput[] | null {
+  switch (outputTokenId) {
+    case ITEM_TO_TOKEN_ID.oak_planks:
+      return [{ tokenId: ITEM_TO_TOKEN_ID.oak_log, amount: 1 }];
+    case ITEM_TO_TOKEN_ID.stick:
+      return [{ tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 2 }];
+    case ITEM_TO_TOKEN_ID.wooden_pickaxe:
+      return [
+        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
+        { tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 3 },
+      ];
+    case ITEM_TO_TOKEN_ID.diamond_pickaxe:
+      return [
+        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
+        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 3 },
+      ];
+    case ITEM_TO_TOKEN_ID.diamond_sword:
+      return [
+        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 1 },
+        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 2 },
+      ];
+    default:
+      return null; // No recipe (base resource or invalid)
+  }
+}
