@@ -61,6 +61,7 @@ const fetchBalances = async (address: string) => {
 
   const result: Record<TItemKey, number> = {
     oak_log: 0,
+    stick: 0,
     diamond: 0,
     oak_planks: 0,
     diamond_pickaxe: 0,
