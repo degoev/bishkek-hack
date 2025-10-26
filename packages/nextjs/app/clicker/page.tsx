@@ -15,7 +15,7 @@ const tabs = {
 
 const items = {
   oak_log: { name: "Oak log", stackSize: 64, itemsPerClick: 1 },
-  sticks: { name: "Sticks", stackSize: 64, itemsPerClick: 1 },
+  stick: { name: "Stick", stackSize: 64, itemsPerClick: 1 },
   diamond: { name: "Diamond", stackSize: 64, itemsPerClick: 1 },
   oak_planks: { name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
   diamond_pickaxe: { name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
@@ -39,7 +39,7 @@ const useStore = create<Store>()(
       isInitialized: false,
       items: {
         oak_log: 0,
-        sticks: 0,
+        stick: 0,
         diamond: 0,
         oak_planks: 0,
         diamond_pickaxe: 0,
