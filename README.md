@@ -1,21 +1,41 @@
-# 🏗 Scaffold-ETH 2
+# ⛏️ Minecraft Crafting on Blockchain
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+A Minecraft-themed on-chain crafting game built with Scaffold-ETH 2. Craft items, manage resources, and experience familiar Minecraft mechanics powered by Ethereum smart contracts.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+## 🎮 Features
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and Typescript.
+- **On-Chain Crafting System**: Craft items using recipes stored and executed on the blockchain
+- **ERC-1155 Items**: All game items (logs, planks, sticks, tools) are represented as NFTs
+- **Minecraft-Style UI**: Familiar crafting interface with Minecraft textures
+- **Recipe Management**: Add, remove, and execute crafting recipes via smart contracts
+- **Batch Crafting**: Support for crafting multiple items in a single transaction
+- **Item Bridging**: Transfer items between different game states
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+## 📦 Available Items
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+- Oak Logs & Planks
+- Sticks
+- Wooden Pickaxe
+- Diamonds
+- Diamond Pickaxe
+- Diamond Sword
+
+## 🛠 Tech Stack
+
+⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and TypeScript.
+
+- **Frontend**: Next.js 15.2, React 19, Tailwind CSS 4, daisyUI 5
+- **Smart Contracts**: Hardhat, Solidity 0.8.20, OpenZeppelin (ERC-1155)
+- **Web3**: Wagmi 2.16, Viem 2.34, RainbowKit 2.2
+- **State Management**: Zustand
+
+### Scaffold-ETH 2 Features
+
+- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it
+- 🪝 **Custom hooks**: React hooks wrapper around [wagmi](https://wagmi.sh/) for simplified contract interactions
+- 🧱 **Web3 Components**: Ready-to-use components for addresses, balances, inputs, and more
+- 🔥 **Burner Wallet & Local Faucet**: Quick testing with pre-funded local wallets
+- 🔐 **Wallet Provider Integration**: Connect with MetaMask, WalletConnect, and more
 
 ## Requirements
 
@@ -25,56 +45,155 @@ Before you begin, you need to install the following tools:
 - Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
 - [Git](https://git-scm.com/downloads)
 
-## Quickstart
+## 🚀 Quick Start
 
-To get started with Scaffold-ETH 2, follow the steps below:
+### Installation
 
-1. Install dependencies if it was skipped in CLI:
+1. **Clone the repository and install dependencies:**
 
-```
-cd my-dapp-example
+```bash
+git clone <repository-url>
+cd bishkek-hack
 yarn install
 ```
 
-2. Run a local network in the first terminal:
+### Running the Application
 
-```
+You'll need **three terminal windows** to run the full application:
+
+#### Terminal 1: Start Local Blockchain
+
+```bash
 yarn chain
 ```
 
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/hardhat/hardhat.config.ts`.
+This starts a local Hardhat network. The network runs on `localhost:8545` and provides 10 pre-funded test accounts.
 
-3. On a second terminal, deploy the test contract:
+#### Terminal 2: Deploy Smart Contracts
 
-```
+```bash
 yarn deploy
 ```
 
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
+This deploys the `MinecraftItems` contract to your local network. The contract ABI is automatically generated and synced to the frontend.
 
-4. On a third terminal, start your NextJS app:
+#### Terminal 3: Start Frontend
 
-```
+```bash
 yarn start
 ```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+The application will be available at **http://localhost:3000**
 
-Run smart contract test with `yarn hardhat:test`
+### 🎯 Using the Application
 
-- Edit your smart contracts in `packages/hardhat/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/hardhat/deploy`
+1. **Connect Wallet**: Click "Connect Wallet" and select a wallet (burner wallet is auto-created for local testing)
+2. **Mint Initial Items**: Use the interface to mint starting items (logs, diamonds)
+3. **Craft Items**: Follow Minecraft recipes to craft tools and items
+4. **View Inventory**: See your item balances in real-time
+
+## 🧪 Development Commands
+
+### Smart Contract Development
+
+```bash
+# Compile contracts
+yarn compile
+
+# Run contract tests
+yarn test
+yarn hardhat:test
+
+# Clean artifacts
+yarn hardhat:clean
+
+# Deploy to specific network
+yarn deploy --network <network-name>
+```
+
+### Frontend Development
+
+```bash
+# Start dev server
+yarn start
+
+# Build for production
+yarn next:build
+
+# Type checking
+yarn next:check-types
+
+# Lint code
+yarn next:lint
+
+# Format code
+yarn next:format
+```
+
+### Debugging
+
+- **Debug Contracts**: Navigate to http://localhost:3000/debug to interact directly with contract functions
+- **Block Explorer**: Navigate to http://localhost:3000/blockexplorer to view transactions and blocks
+
+## 📁 Project Structure
+
+```
+bishkek-hack/
+├── packages/
+│   ├── hardhat/              # Smart contracts
+│   │   ├── contracts/
+│   │   │   └── MinecraftItems.sol    # Main ERC-1155 crafting contract
+│   │   ├── deploy/           # Deployment scripts
+│   │   └── test/             # Contract tests
+│   │
+│   └── nextjs/               # Frontend application
+│       ├── app/              # Next.js pages
+│       │   └── page.tsx      # Main crafting interface
+│       ├── components/       # React components
+│       │   └── crafting/     # Crafting UI components
+│       ├── hooks/            # Custom React hooks
+│       ├── services/web3/    # Web3 utilities
+│       │   └── itemConfig.ts # Item to token ID mappings
+│       └── scaffold.config.ts # Scaffold-ETH configuration
+```
 
 
-## Documentation
+## 📚 Smart Contract Overview
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+### MinecraftItems.sol
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+The main contract implementing the crafting system:
 
-## Contributing to Scaffold-ETH 2
+- **Standard**: ERC-1155 multi-token standard
+- **Key Functions**:
+  - `craft(uint256 recipeId)`: Craft items using a recipe
+  - `aggrCraft(uint256 recipeId, uint256 times)`: Batch craft multiple items
+  - `addRecipe()`: Add new crafting recipes (owner only)
+  - `bridge()`: Transfer items between states
+  - `mintInitial()` / `mintInitialBatch()`: Mint starting items
 
-We welcome contributions to Scaffold-ETH 2!
+### Crafting Recipes
 
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+Recipes are stored on-chain with:
+- Input token IDs and amounts
+- Output token ID and amount
+- Automatic validation and execution
+
+## 🔗 Resources
+
+- **Scaffold-ETH 2 Docs**: [docs.scaffoldeth.io](https://docs.scaffoldeth.io)
+- **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs)
+- **Hardhat Documentation**: [hardhat.org/docs](https://hardhat.org/docs)
+- **Wagmi Documentation**: [wagmi.sh](https://wagmi.sh)
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs or issues
+- Suggest new features or items
+- Submit pull requests
+- Improve documentation
+
+## 📝 License
+
+This project is built on Scaffold-ETH 2 and inherits its open-source license.
