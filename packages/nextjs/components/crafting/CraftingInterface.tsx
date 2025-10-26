@@ -10,13 +10,34 @@ import { InventoryPanel } from "./InventoryPanel";
 import { TransactionStatus } from "./TransactionStatus";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { useAccount } from "wagmi";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useMinecraftCrafting } from "~~/hooks/useMinecraftCrafting";
 import { getRecipeFromPattern } from "~~/services/web3/recipeMapper";
 
 export const CraftingInterface: React.FC = () => {
   const [activeItem, setActiveItem] = React.useState<MinecraftItem | null>(null);
-  const { craftingGrid, clearCraftingGrid } = useCraftingStore();
+  const { craftingGrid, clearCraftingGrid, inventory } = useCraftingStore();
   const { address, isConnected, connector } = useAccount();
+
+  const { writeContractAsync: bridge } = useScaffoldWriteContract({ contractName: "MinecraftItems" });
+
+  const bridgeItemsToGame = async () => {
+    if (!address) {
+      alert("Please connect your wallet to bridge items");
+      return;
+    }
+
+    const swordsCount = inventory.find(({ item }) => item.id === "diamond_sword")?.quantity || 0;
+    const pickaxesCount = inventory.find(({ item }) => item.id === "diamond_pickaxe")?.quantity || 0;
+
+    const txHash = await bridge({
+      functionName: "bridge",
+      args: [
+        [6n, 7n],
+        [BigInt(swordsCount), BigInt(pickaxesCount)],
+      ],
+    });
+  };
 
   useEffect(() => {
     if (isConnected) {
@@ -123,7 +144,6 @@ export const CraftingInterface: React.FC = () => {
           {/* Left panel: Crafting table */}
           <div className="flex h-fit grow flex-col gap-4 border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
             <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
-
             <div className="flex items-center gap-6 border-2 border-neutral-700 bg-neutral-900/60 p-3">
               {/* 3x3 Crafting Grid */}
               <div className="flex flex-col items-center">
@@ -148,7 +168,6 @@ export const CraftingInterface: React.FC = () => {
                 <CraftingResult />
               </div>
             </div>
-
             {/* Action Buttons */}
             <button
               onClick={handleCraft}
@@ -170,6 +189,9 @@ export const CraftingInterface: React.FC = () => {
                 "Craft Item"
               )}
             </button>
+
+            <button onClick={bridgeItemsToGame}>BRIDGE</button>
+
             <button
               onClick={handleClear}
               disabled={isCrafting}
