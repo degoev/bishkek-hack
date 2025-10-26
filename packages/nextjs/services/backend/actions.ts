@@ -8,6 +8,8 @@ import { waitForTransactionReceipt, writeContract } from "viem/actions";
 import deployedContractsData from "~~/contracts/deployedContracts";
 import scaffoldConfig from "~~/scaffold.config";
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const increaseItemBalanceAction = async (userAddress: Address, item: ItemUid, amount: number) => {
   const key = RKEYS.BALANCES[item];
   if (!key) throw new Error(`Unknown item: ${item}`);
@@ -63,7 +65,13 @@ export const bridgeItemsToChainAction = async (userAddress: Address, items: Item
     functionName: "mintInitialBatch",
     args: [userAddress, itemIds, bigintAmounts],
   });
-  const receipt = await waitForTransactionReceipt(deployerClient, { hash: tx });
+  const receipt = await waitForTransactionReceipt(deployerClient, { hash: tx }).catch(async err => {
+    // Retry logic for waiting for receipt
+    console.warn("Initial waitForTransactionReceipt failed, retrying...", err);
+    await sleep(3000);
+    return waitForTransactionReceipt(deployerClient, { hash: tx });
+  });
+
   if (receipt && receipt.status !== "success") {
     throw new Error(`Transaction failed: ${tx}`);
   }
