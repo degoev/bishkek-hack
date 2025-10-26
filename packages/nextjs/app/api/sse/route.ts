@@ -2,6 +2,7 @@ import { createPublicClient, webSocket } from "viem";
 import deployedContractsData from "~~/contracts/deployedContracts";
 import scaffoldConfig from "~~/scaffold.config";
 import { increaseItemBalanceAction } from "~~/services/backend/actions";
+import { RKEYS, redis } from "~~/services/backend/redis";
 import { ItemUid, TOKEN_ID_TO_ITEM } from "~~/services/web3/itemConfig";
 
 export const runtime = "nodejs";
@@ -22,13 +23,24 @@ const writer = responseStream.writable.getWriter();
 const encoder = new TextEncoder();
 console.log(`Setuping stream...`);
 
-client.watchContractEvent({
+const key = RKEYS.PROCESSED_BRIDGE_TXS;
+
+const unwatch = client.watchContractEvent({
   abi: contract.abi,
   address: contract.address,
   eventName: "ItemsBridged",
 
   onLogs: async logs => {
     for (const log of logs) {
+      const isProcessed = await redis.sIsMember(key, log.transactionHash.toLowerCase());
+      console.log(`onLogs isProcessed`, isProcessed, log.transactionHash);
+
+      if (isProcessed) {
+        unwatch();
+        continue;
+      }
+      await redis.sAdd(key, log.transactionHash.toLowerCase());
+
       const str = JSON.stringify(log, (_, value) => (typeof value === "bigint" ? String(value) : value), 2);
       console.info(`🚀 ~ "Log": ${str}`);
       if (!writer.closed) {
