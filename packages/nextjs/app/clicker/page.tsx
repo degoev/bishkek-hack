@@ -14,11 +14,12 @@ const tabs = {
 } as const;
 
 const items = {
-  oak_log: { id: 0, name: "Oak log", stackSize: 64, itemsPerClick: 1 },
-  diamond: { id: 0, name: "Diamond", stackSize: 64, itemsPerClick: 1 },
-  oak_planks: { id: 0, name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
-  diamond_pickaxe: { id: 0, name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
-  diamond_sword: { id: 0, name: "Diamond sword", stackSize: 1, itemsPerClick: 1 },
+  oak_log: { name: "Oak log", stackSize: 64, itemsPerClick: 1 },
+  sticks: { name: "Sticks", stackSize: 64, itemsPerClick: 1 },
+  diamond: { name: "Diamond", stackSize: 64, itemsPerClick: 1 },
+  oak_planks: { name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
+  diamond_pickaxe: { name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
+  diamond_sword: { name: "Diamond sword", stackSize: 1, itemsPerClick: 1 },
 } as const;
 
 type TItemKey = keyof typeof items;
@@ -38,6 +39,7 @@ const useStore = create<Store>()(
       isInitialized: false,
       items: {
         oak_log: 0,
+        sticks: 0,
         diamond: 0,
         oak_planks: 0,
         diamond_pickaxe: 0,
