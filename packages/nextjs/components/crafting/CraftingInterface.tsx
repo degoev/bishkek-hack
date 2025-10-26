@@ -29,6 +29,7 @@ export const CraftingInterface: React.FC = () => {
 
     const swordsCount = inventory.find(({ item }) => item.id === "diamond_sword")?.quantity || 0;
     const pickaxesCount = inventory.find(({ item }) => item.id === "diamond_pickaxe")?.quantity || 0;
+    const woodenPickaxesCount = inventory.find(({ item }) => item.id === "wooden_pickaxe")?.quantity || 0;
 
     const txHash = await bridge({
       functionName: "bridge",
@@ -36,6 +37,10 @@ export const CraftingInterface: React.FC = () => {
         const ids: bigint[] = [];
         const amounts: bigint[] = [];
 
+        if (woodenPickaxesCount > 0) {
+          ids.push(4n);
+          amounts.push(BigInt(woodenPickaxesCount));
+        }
         if (pickaxesCount > 0) {
           ids.push(6n);
           amounts.push(BigInt(pickaxesCount));
