@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -28,15 +29,12 @@ type TTabKey = keyof typeof tabs;
 type Store = {
   tab: TTabKey;
   items: Record<TItemKey, number>;
-  isInitialized: boolean;
 };
 
 const useStore = create<Store>()(
   persist(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_set, _get) => ({
       tab: "forest",
-      isInitialized: false,
       items: {
         oak_log: 0,
         stick: 0,
@@ -57,22 +55,28 @@ const getTab = (key: string) => {
 
 type TStack = { itemKey: TItemKey; count: number };
 
-const initialize = async (address: string) => {
+const fetchBalances = async (address: string) => {
   const itemKeys = Object.keys(items) as TItemKey[];
   const balances = await Promise.all(itemKeys.map(itemKey => getItemBalanceAction(address, itemKey)));
 
+  const result: Record<TItemKey, number> = {
+    oak_log: 0,
+    diamond: 0,
+    oak_planks: 0,
+    diamond_pickaxe: 0,
+    diamond_sword: 0,
+  };
   balances.forEach((balance, idx) => {
     const itemKey = itemKeys[idx];
-    useStore.setState(state => ({
-      items: {
-        ...state.items,
-        [itemKey]: balance,
-      },
-    }));
+    result[itemKey] = balance;
   });
 
-  useStore.setState({ isInitialized: true });
+  return result;
 };
+// const updateStoreBalances = async (address: string, balances: Promise<ReturnType<typeof fetchBalances>>) => {
+//   const balances = await fetchBalances(address);
+//   useStore.setState({ items: balances });
+// };
 
 const computeStacks = (counts: Record<TItemKey, number>): TStack[] => {
   const result: TStack[] = [];
@@ -96,13 +100,26 @@ const computeStacks = (counts: Record<TItemKey, number>): TStack[] => {
 export default (() => {
   const { address } = useAccount();
 
+  const {
+    data: balances,
+    isSuccess,
+    refetch,
+  } = useQuery({
+    queryKey: ["clicker", "balances", address],
+    queryFn: () => {
+      if (!address) return;
+      return fetchBalances(address);
+    },
+    enabled: !!address,
+    refetchInterval: 1000,
+  });
+
   useEffect(() => {
-    if (!address) return;
-    initialize(address);
-  }, [address]);
+    if (!address || !balances) return;
+    useStore.setState({ items: balances });
+  }, [address, balances]);
 
   const activeTabKey = useStore(state => state.tab);
-  const isInitialized = useStore(state => state.isInitialized);
   const activeTab = getTab(activeTabKey);
 
   const itemCounts = useStore(state => state.items);
@@ -141,7 +158,7 @@ export default (() => {
   }, [onClick]);
 
   if (!activeTab) return null;
-  if (!isInitialized) return <div>Loading...</div>;
+  if (!isSuccess) return <div>Loading...</div>;
 
   return (
     <main
@@ -238,7 +255,7 @@ export default (() => {
                 address,
                 stacks.map(s => s.itemKey),
               );
-              initialize(address);
+              refetch();
             }}
             className="border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
           >
