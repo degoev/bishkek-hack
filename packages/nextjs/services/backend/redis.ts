@@ -42,6 +42,7 @@ const ITEM_BALANCES_KEYS: {
 
 const REDIS_KEYS = {
   BALANCES: ITEM_BALANCES_KEYS,
+  PROCESSED_BRIDGE_TXS: `${prefix}:processed_bridge_txs`,
 } as const;
 
 export { redis, REDIS_KEYS as RKEYS };
