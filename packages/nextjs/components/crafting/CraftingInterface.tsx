@@ -100,27 +100,40 @@ export const CraftingInterface: React.FC = () => {
   };
 
   const handleClear = () => {
-    clearCraftingGrid();
+    const { craftingGrid, setCraftingSlot, addToInventory } = useCraftingStore.getState();
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const slot = craftingGrid[i][j];
+        if (slot && slot.item) {
+          addToInventory(slot.item, slot.quantity);
+          setCraftingSlot(i, j, null);
+        }
+      }
+    }
   };
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex min-h-screen flex-col gap-8 bg-gradient-to-b from-amber-50 to-amber-100 p-6 lg:flex-row">
-        {/* Crafting Table Section */}
-        <div className="flex flex-col items-center space-y-6">
-          <h1 className="mb-4 text-3xl font-bold text-amber-900">Minecraft Crafting Table</h1>
+      <div className="flex min-h-svh flex-col bg-gradient-to-b p-8">
+        <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+          Onchain craft
+        </h1>
 
-          <div className="rounded-lg border-4 border-amber-900 bg-amber-800 p-6 shadow-2xl">
-            <div className="flex items-center gap-6">
+        <div className="mx-auto flex w-full max-w-7xl grow gap-4 p-4 max-md:flex-col">
+          {/* Left panel: Crafting table */}
+          <div className="flex h-fit grow flex-col gap-4 border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+            <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Crafting Table</h2>
+
+            <div className="flex items-center gap-6 border-2 border-neutral-700 bg-neutral-900/60 p-3">
               {/* 3x3 Crafting Grid */}
               <div className="flex flex-col items-center">
-                <h2 className="mb-2 text-lg font-semibold text-amber-100">Crafting Grid</h2>
+                <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Crafting Grid</h3>
                 <CraftingGrid />
               </div>
 
               {/* Arrow */}
               <div className="flex items-center">
-                <svg className="h-8 w-8 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-8 w-8 text-neutral-200" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
@@ -131,47 +144,50 @@ export const CraftingInterface: React.FC = () => {
 
               {/* Result Slot */}
               <div className="flex flex-col items-center">
-                <h2 className="mb-2 text-lg font-semibold text-amber-100">Result</h2>
+                <h3 className="mb-2 text-xs font-semibold text-neutral-200 uppercase">Result</h3>
                 <CraftingResult />
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 flex justify-center gap-4">
-              <button
-                onClick={handleCraft}
-                disabled={isCrafting || !address}
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 ${
-                  isCrafting || !address ? "cursor-not-allowed bg-gray-400" : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                {isCrafting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    Crafting...
-                  </span>
-                ) : !address ? (
-                  "Connect Wallet"
-                ) : (
-                  "Craft Item"
-                )}
-              </button>
-              <button
-                onClick={handleClear}
-                disabled={isCrafting}
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-lg transition-colors duration-200 ${
-                  isCrafting ? "cursor-not-allowed bg-gray-400" : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                Clear Grid
-              </button>
-            </div>
+            <button
+              onClick={handleCraft}
+              disabled={isCrafting || !address}
+              className={`border-4 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
+                isCrafting || !address
+                  ? "cursor-not-allowed border-neutral-700 bg-neutral-600/60 opacity-60"
+                  : "border-emerald-800 bg-emerald-600 hover:bg-emerald-500 active:translate-y-[1px]"
+              }`}
+            >
+              {isCrafting ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  Crafting...
+                </span>
+              ) : !address ? (
+                "Connect Wallet"
+              ) : (
+                "Craft Item"
+              )}
+            </button>
+            <button
+              onClick={handleClear}
+              disabled={isCrafting}
+              className={`border-4 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors ${
+                isCrafting
+                  ? "cursor-not-allowed border-neutral-700 bg-neutral-800 opacity-60"
+                  : "border-neutral-700 bg-neutral-900 hover:bg-neutral-800"
+              }`}
+            >
+              Clear Grid
+            </button>
           </div>
-        </div>
 
-        {/* Inventory Section */}
-        <div className="flex-1">
-          <InventoryPanel />
+          {/* Right panel: Inventory */}
+          <div className="flex h-fit grow flex-col gap-2 border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+            <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
+            <InventoryPanel />
+          </div>
         </div>
       </div>
 

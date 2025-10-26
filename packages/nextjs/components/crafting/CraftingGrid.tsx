@@ -26,7 +26,11 @@ const CraftingSlot: React.FC<CraftingSlotProps> = ({ row, col }) => {
   return (
     <div
       ref={setNodeRef}
-      className={`flex h-16 w-16 items-center justify-center rounded-lg border-2 border-stone-500 transition-all duration-200 ${isOver ? "border-yellow-400 bg-yellow-100" : "bg-stone-300"} ${slot ? "" : "bg-gradient-to-br from-stone-200 to-stone-300"} `}
+      className={`group relative flex h-16 w-16 items-center justify-center border-2 border-neutral-700 bg-neutral-900 transition-colors transition-transform hover:border-emerald-500 hover:bg-neutral-800 ${
+        isOver
+          ? "scale-[1.03] border-emerald-500 bg-neutral-800 shadow-[0_0_0_3px_rgba(16,185,129,0.2)] ring-2 ring-emerald-500"
+          : ""
+      }`}
     >
       {slot && <DraggableItem item={slot.item!} quantity={slot.quantity} source="crafting" position={{ row, col }} />}
     </div>
@@ -35,7 +39,7 @@ const CraftingSlot: React.FC<CraftingSlotProps> = ({ row, col }) => {
 
 export const CraftingGrid: React.FC = () => {
   return (
-    <div className="grid grid-cols-3 gap-1 rounded-lg border-2 border-stone-700 bg-stone-800 p-2">
+    <div className="grid grid-cols-3 gap-1 border-2 border-neutral-700 bg-neutral-900/60 p-2">
       {Array.from({ length: 3 }, (_, row) =>
         Array.from({ length: 3 }, (_, col) => <CraftingSlot key={`${row}-${col}`} row={row} col={col} />),
       )}

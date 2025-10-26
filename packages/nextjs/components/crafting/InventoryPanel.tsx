@@ -16,17 +16,19 @@ export const InventoryPanel: React.FC = () => {
   });
 
   return (
-    <div className="rounded-lg border-4 border-amber-900 bg-amber-800 p-6 shadow-2xl">
-      <h2 className="mb-4 text-2xl font-bold text-amber-100">Inventory</h2>
-
+    <div>
+      {/* Inventory Grid */}
       <div
         ref={setNodeRef}
-        className={`grid max-h-96 grid-cols-4 gap-3 overflow-y-auto rounded-lg border-2 border-stone-700 bg-stone-800 p-4 transition-all duration-200 sm:grid-cols-6 md:grid-cols-8 ${
-          isOver ? "border-yellow-400 bg-stone-700" : ""
+        className={`grid grid-cols-6 gap-0 border-2 border-neutral-700 bg-neutral-900/60 ${
+          isOver ? "border-emerald-500 bg-neutral-800" : ""
         }`}
       >
         {inventory.map((inventoryItem, index) => (
-          <div key={`${inventoryItem.item.id}-${index}`} className="flex justify-center">
+          <div
+            key={`${inventoryItem.item.id}-${index}`}
+            className="group relative aspect-square border-2 border-neutral-700 bg-neutral-900 transition-colors hover:border-emerald-500 hover:bg-neutral-800"
+          >
             <DraggableItem
               item={inventoryItem.item}
               quantity={inventoryItem.quantity}
@@ -40,15 +42,15 @@ export const InventoryPanel: React.FC = () => {
         {Array.from({ length: Math.max(0, 24 - inventory.length) }, (_, index) => (
           <div
             key={`empty-${index}`}
-            className="h-16 w-16 rounded-lg border-2 border-stone-600 bg-stone-700 opacity-50"
+            className="group relative aspect-square border-2 border-neutral-700 bg-neutral-900 transition-colors hover:border-emerald-500 hover:bg-neutral-800"
           />
         ))}
       </div>
 
       {/* Inventory Info */}
-      <div className="mt-4 text-sm text-amber-200">
+      <div className="mt-4 text-xs text-neutral-400">
         <p>Items: {inventory.length}/24</p>
-        <p className="mt-1 text-xs opacity-75">Drag items to the crafting grid to create new items</p>
+        <p className="mt-1 opacity-75">Drag items to the crafting grid to create new items</p>
       </div>
     </div>
   );

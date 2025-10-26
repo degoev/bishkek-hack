@@ -15,11 +15,12 @@ const tabs = {
 } as const;
 
 const items = {
-  oak_log: { id: 0, name: "Oak log", stackSize: 64, itemsPerClick: 1 },
-  diamond: { id: 0, name: "Diamond", stackSize: 64, itemsPerClick: 1 },
-  oak_planks: { id: 0, name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
-  diamond_pickaxe: { id: 0, name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
-  diamond_sword: { id: 0, name: "Diamond sword", stackSize: 1, itemsPerClick: 1 },
+  oak_log: { name: "Oak log", stackSize: 64, itemsPerClick: 1 },
+  stick: { name: "Stick", stackSize: 64, itemsPerClick: 1 },
+  diamond: { name: "Diamond", stackSize: 64, itemsPerClick: 1 },
+  oak_planks: { name: "Oak planks", stackSize: 64, itemsPerClick: 1 },
+  diamond_pickaxe: { name: "Diamond pickaxe", stackSize: 1, itemsPerClick: 1 },
+  diamond_sword: { name: "Diamond sword", stackSize: 1, itemsPerClick: 1 },
 } as const;
 
 type TItemKey = keyof typeof items;
@@ -36,6 +37,7 @@ const useStore = create<Store>()(
       tab: "forest",
       items: {
         oak_log: 0,
+        stick: 0,
         diamond: 0,
         oak_planks: 0,
         diamond_pickaxe: 0,
@@ -59,6 +61,7 @@ const fetchBalances = async (address: string) => {
 
   const result: Record<TItemKey, number> = {
     oak_log: 0,
+    stick: 0,
     diamond: 0,
     oak_planks: 0,
     diamond_pickaxe: 0,
@@ -159,10 +162,21 @@ export default (() => {
   if (!isSuccess) return <div>Loading...</div>;
 
   return (
-    <main className="flex min-h-svh flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 p-8">
-      <div className="mx-auto flex w-full max-w-4xl grow gap-4 rounded-sm p-4 ring-4 ring-neutral-800">
-        <div className="flex w-xs shrink-0 flex-col gap-4 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-          <ul className="flex w-fit gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-900/70 p-1">
+    <main
+      style={{
+        background: "url(/textures/stone.png)",
+        backgroundPosition: "center",
+        backgroundSize: 48,
+      }}
+      className="flex min-h-svh flex-col p-8"
+    >
+      <h1 className="mx-4 border-2 border-neutral-700 bg-neutral-800/80 p-6 px-4 text-3xl shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+        Offchain game
+      </h1>
+
+      <div className="mx-auto flex w-full max-w-4xl grow gap-4 p-4 max-md:flex-col">
+        <div className="flex h-fit flex-col gap-4 border-2 border-neutral-700 bg-neutral-800/80 p-3 shadow-[4px_4px_0_rgba(0,0,0,0.25)] md:grow">
+          <ul className="flex w-fit gap-2 border-2 border-neutral-700 bg-neutral-900/70 p-1">
             {Object.keys(tabs).map(key => {
               const tab = getTab(key);
               if (!tab) return null;
@@ -175,7 +189,7 @@ export default (() => {
                 <li key={key}>
                   <button
                     className={cn(
-                      "flex gap-1 rounded-sm border-2 px-3 py-1 text-xs tracking-wide uppercase shadow-[2px_2px_0_rgba(0,0,0,0.5)] transition-colors",
+                      "flex gap-1 border-2 px-3 py-1 text-xs tracking-wide uppercase shadow-[2px_2px_0_rgba(0,0,0,0.25)] transition-colors",
                       isActive
                         ? "border-emerald-500 bg-emerald-700 text-white"
                         : "border-neutral-700 bg-neutral-800 text-neutral-200 hover:border-neutral-500 hover:bg-neutral-700",
@@ -198,15 +212,15 @@ export default (() => {
           </ul>
 
           <button
-            className="rounded-sm border-4 border-emerald-800 bg-emerald-600 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-emerald-500 active:translate-y-[1px]"
+            className="border-4 border-emerald-800 bg-emerald-600 p-3 px-4 text-neutral-50 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-emerald-500 active:translate-y-[1px]"
             onClick={onClick}
           >
-            {activeTab.button} (space)
+            {activeTab.button} (space bar)
           </button>
         </div>
 
-        <div className="flex grow flex-col gap-2 rounded-sm border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-          <h2 className="font-mono text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
+        <div className="flex h-fit grow flex-col gap-2 border-2 border-neutral-700 bg-neutral-800/80 p-4 shadow-[4px_4px_0_rgba(0,0,0,0.25)]">
+          <h2 className="text-sm tracking-wide text-emerald-300 uppercase">Your inventory</h2>
 
           <div className="grid grid-cols-6 gap-0 border-2 border-neutral-700 bg-neutral-900/60">
             {slots.map((slot, index) => (
@@ -216,7 +230,7 @@ export default (() => {
               >
                 {slot ? (
                   <>
-                    <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded-sm border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.5)] group-hover:block">
+                    <div className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 border border-neutral-700 bg-neutral-800 px-2 py-1 text-[11px] whitespace-pre text-neutral-200 shadow-[2px_2px_0_rgba(0,0,0,0.25)] group-hover:block">
                       {items[slot.itemKey].name}
                     </div>
                     <Image
@@ -225,7 +239,7 @@ export default (() => {
                       fill
                       className="object-contain p-2"
                     />
-                    <span className="pointer-events-none absolute right-1 bottom-1 rounded-sm bg-neutral-800/90 px-1 font-mono text-xs text-emerald-300">
+                    <span className="pointer-events-none absolute right-1 bottom-1 bg-neutral-800/90 px-1 text-xs text-emerald-300">
                       {slot.count}
                     </span>
                   </>
@@ -244,7 +258,7 @@ export default (() => {
               );
               refetch();
             }}
-            className="rounded-sm border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
+            className="border-4 border-neutral-700 bg-neutral-900 p-3 px-4 text-neutral-200 shadow-[3px_3px_0_rgba(0,0,0,0.6)] transition-colors hover:bg-neutral-800"
           >
             Move resources onchain
           </button>
