@@ -104,59 +104,14 @@ function detectDiamondToolPattern(grid: (CraftingSlot | null)[][]): bigint {
   return ITEM_TO_TOKEN_ID.diamond_pickaxe;
 }
 
-/**
- * Gets the expected output amount for a given recipe
- * Based on contract recipe configuration
- */
-export function getRecipeOutputAmount(outputTokenId: bigint): number {
-  switch (outputTokenId) {
-    case ITEM_TO_TOKEN_ID.oak_planks:
-      return 4;
-    case ITEM_TO_TOKEN_ID.stick:
-      return 4;
-    case ITEM_TO_TOKEN_ID.wooden_pickaxe:
-    case ITEM_TO_TOKEN_ID.diamond_pickaxe:
-    case ITEM_TO_TOKEN_ID.diamond_sword:
-      return 1;
-    default:
-      return 1;
-  }
-}
+// Re-export shared recipe utilities for backward compatibility
+export { getRecipeOutputAmount, getRecipeInputs } from "./recipeConfig";
 
 /**
  * Recipe input information
+ * @deprecated Use getRecipeInputs() return type instead
  */
 export interface RecipeInput {
   tokenId: bigint;
   amount: number;
-}
-
-/**
- * Gets the input requirements for a given recipe
- * Returns null if no recipe exists for this output
- */
-export function getRecipeInputs(outputTokenId: bigint): RecipeInput[] | null {
-  switch (outputTokenId) {
-    case ITEM_TO_TOKEN_ID.oak_planks:
-      return [{ tokenId: ITEM_TO_TOKEN_ID.oak_log, amount: 1 }];
-    case ITEM_TO_TOKEN_ID.stick:
-      return [{ tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 2 }];
-    case ITEM_TO_TOKEN_ID.wooden_pickaxe:
-      return [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
-        { tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 3 },
-      ];
-    case ITEM_TO_TOKEN_ID.diamond_pickaxe:
-      return [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
-        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 3 },
-      ];
-    case ITEM_TO_TOKEN_ID.diamond_sword:
-      return [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 1 },
-        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 2 },
-      ];
-    default:
-      return null; // No recipe (base resource or invalid)
-  }
 }

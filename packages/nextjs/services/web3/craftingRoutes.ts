@@ -1,83 +1,5 @@
 import { ITEM_TO_TOKEN_ID } from "./itemConfig";
-
-/**
- * Recipe dependency tree
- * Maps output token ID to its recipe requirements
- */
-interface RecipeNode {
-  outputTokenId: bigint;
-  outputAmount: number;
-  inputs: Array<{
-    tokenId: bigint;
-    amount: number;
-  }>;
-}
-
-/**
- * Complete recipe tree based on deployment configuration
- * Base resources (oak_log: 1, diamond: 5) have no recipes
- */
-const RECIPE_TREE: Map<bigint, RecipeNode> = new Map([
-  // Token 2 (oak_planks): 1 oak_log → 4 oak_planks
-  [
-    ITEM_TO_TOKEN_ID.oak_planks,
-    {
-      outputTokenId: ITEM_TO_TOKEN_ID.oak_planks,
-      outputAmount: 4,
-      inputs: [{ tokenId: ITEM_TO_TOKEN_ID.oak_log, amount: 1 }],
-    },
-  ],
-  // Token 3 (stick): 2 oak_planks → 4 sticks
-  [
-    ITEM_TO_TOKEN_ID.stick,
-    {
-      outputTokenId: ITEM_TO_TOKEN_ID.stick,
-      outputAmount: 4,
-      inputs: [{ tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 2 }],
-    },
-  ],
-  // Token 4 (wooden_pickaxe): 2 sticks + 3 oak_planks → 1 wooden_pickaxe
-  [
-    ITEM_TO_TOKEN_ID.wooden_pickaxe,
-    {
-      outputTokenId: ITEM_TO_TOKEN_ID.wooden_pickaxe,
-      outputAmount: 1,
-      inputs: [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
-        { tokenId: ITEM_TO_TOKEN_ID.oak_planks, amount: 3 },
-      ],
-    },
-  ],
-  // Token 6 (diamond_pickaxe): 2 sticks + 3 diamonds → 1 diamond_pickaxe
-  [
-    ITEM_TO_TOKEN_ID.diamond_pickaxe,
-    {
-      outputTokenId: ITEM_TO_TOKEN_ID.diamond_pickaxe,
-      outputAmount: 1,
-      inputs: [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 2 },
-        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 3 },
-      ],
-    },
-  ],
-  // Token 7 (diamond_sword): 1 stick + 2 diamonds → 1 diamond_sword
-  [
-    ITEM_TO_TOKEN_ID.diamond_sword,
-    {
-      outputTokenId: ITEM_TO_TOKEN_ID.diamond_sword,
-      outputAmount: 1,
-      inputs: [
-        { tokenId: ITEM_TO_TOKEN_ID.stick, amount: 1 },
-        { tokenId: ITEM_TO_TOKEN_ID.diamond, amount: 2 },
-      ],
-    },
-  ],
-]);
-
-/**
- * Base resources that cannot be crafted
- */
-const BASE_RESOURCES = new Set<bigint>([ITEM_TO_TOKEN_ID.oak_log, ITEM_TO_TOKEN_ID.diamond]);
+import { type Recipe, isBaseResource as checkIsBaseResource, getRecipeMap } from "./recipeConfig";
 
 /**
  * Result of crafting route calculation
@@ -112,7 +34,7 @@ interface CraftingStep {
  * @returns CraftingRoute if possible, null if insufficient materials or no recipe exists
  */
 export function calculateCraftingRoute(outputTokenId: bigint, userBalances: readonly bigint[]): CraftingRoute | null {
-  const recipe = RECIPE_TREE.get(outputTokenId);
+  const recipe = getRecipeMap().get(outputTokenId);
 
   // No recipe exists for this output (e.g., trying to craft base resources)
   if (!recipe) {
@@ -171,7 +93,7 @@ function buildCraftingRoute(
   availableMaterials: Map<bigint, number>,
   craftingSteps: CraftingStep[],
 ): boolean {
-  const recipe = RECIPE_TREE.get(targetTokenId);
+  const recipe = getRecipeMap().get(targetTokenId);
 
   // If no recipe, this must be a base resource - check if we have enough
   if (!recipe) {
@@ -246,13 +168,13 @@ function getTokenName(tokenId: bigint): string {
  * Gets recipe information for a given output token ID
  * Used by UI to display recipe requirements
  */
-export function getRecipeInfo(outputTokenId: bigint): RecipeNode | undefined {
-  return RECIPE_TREE.get(outputTokenId);
+export function getRecipeInfo(outputTokenId: bigint): Recipe | undefined {
+  return getRecipeMap().get(outputTokenId);
 }
 
 /**
  * Checks if a token is a base resource (cannot be crafted)
  */
 export function isBaseResource(tokenId: bigint): boolean {
-  return BASE_RESOURCES.has(tokenId);
+  return checkIsBaseResource(tokenId);
 }
